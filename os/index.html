@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OmarOS</title>
+<meta name="description" content="Omar Tamer's portfolio as a working desktop: open apps, play the maze, talk to the hotel bot, run a genetic algorithm.">
+<meta name="theme-color" content="#0a1424">
+<style>
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../assets/fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:600;font-display:swap;src:url(../assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:400;font-display:swap;src:url(../assets/fonts/inter-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:500;font-display:swap;src:url(../assets/fonts/inter-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:600;font-display:swap;src:url(../assets/fonts/inter-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Plex Arabic";font-weight:600;font-display:swap;src:url(../assets/fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2) format("woff2");unicode-range:U+0600-06FF,U+FE70-FEFF}
+
+/* Layout: a working desktop. Night-blue wallpaper, light readable windows, a dock. Sand and Nile blue carry over from Cairo. */
+:root{
+  --wall-1:#0a1424; --wall-2:#12304f; --sand:#e9e2d6; --sand-deep:#c9a978;
+  --win:#fbfcfd; --win-2:#f1f4f8; --ink:#0f1a2a; --muted:#4a5568; --faint:#718096; --line:#dfe5ec;
+  --accent:#1f5bb5; --accent-soft:#e3ecfa; --term:#0d1117; --term-ink:#d6e2f0; --term-green:#7ee2a8; --term-blue:#8db7ff; --term-sand:#e8c98f;
+  --menu:rgba(10,20,36,.72); --dock:rgba(255,255,255,.14);
+  --display:"Bricolage Grotesque","Inter",system-ui,sans-serif;
+  --text:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;overflow:hidden;background:var(--wall-1);color:var(--ink);font:400 15px/1.55 var(--text);-webkit-font-smoothing:antialiased;user-select:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit}
+h1,h2,h3,p,ul,ol{margin:0}
+ul,ol{padding:0;list-style:none}
+img{display:block;max-width:100%}
+:focus-visible{outline:2px solid #8db7ff;outline-offset:2px;border-radius:6px}
+
+/* ---------- wallpaper ---------- */
+#wall{position:fixed;inset:0;width:100%;height:100%}
+.wall-name{position:fixed;right:max(32px,env(safe-area-inset-right,0px));bottom:112px;text-align:right;color:rgba(233,226,214,.9);pointer-events:none}
+.wall-name b{display:block;font:700 clamp(40px,6vw,88px)/.95 var(--display);letter-spacing:-.03em}
+.wall-name span{display:block;font:500 15px/1.4 var(--text);color:rgba(233,226,214,.7);margin-top:10px}
+.wall-name i{font:600 clamp(20px,2vw,28px)/1 "Plex Arabic",sans-serif;font-style:normal;color:rgba(233,226,214,.55);display:block;margin-top:8px}
+
+/* ---------- menu bar ---------- */
+.menubar{position:fixed;inset:0 0 auto 0;z-index:9000;height:calc(32px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:18px;background:var(--menu);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);color:#e8edf5;font-size:13px}
+.menubar .logo{font:700 14px/1 var(--display);letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.menubar .logo svg{width:16px;height:16px}
+.menubar .app-name{font-weight:600}
+.menubar .menus{display:flex;gap:16px;color:#c3cddb}
+.menubar .menus button:hover{color:#fff}
+.menubar .right{margin-left:auto;display:flex;align-items:center;gap:16px;color:#c3cddb;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:3px 10px;border-radius:999px;background:rgba(126,226,168,.14);color:#a6f0c6;font-weight:500}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:#4ade80}
+
+/* ---------- desktop icons ---------- */
+.icons{position:fixed;top:56px;left:max(18px,env(safe-area-inset-left,0px));display:grid;grid-auto-flow:column;grid-template-rows:repeat(auto-fill,96px);gap:6px 10px;height:calc(100% - 170px);z-index:1}
+.dicon{width:92px;display:grid;justify-items:center;gap:6px;padding:8px 4px;border-radius:10px;color:#fff;text-align:center;font:500 12.5px/1.25 var(--text);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.dicon:hover,.dicon:focus-visible{background:rgba(255,255,255,.12)}
+.dicon .ic{width:52px;height:52px}
+
+/* ---------- app icons (shared by desktop and dock) ---------- */
+.ic{display:grid;place-items:center;border-radius:14px;box-shadow:0 6px 16px -6px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.12)}
+.ic svg{width:58%;height:58%}
+.ic-about{background:linear-gradient(160deg,#f3ecdf,#cdb48a)}
+.ic-projects{background:linear-gradient(160deg,#5b9bff,#1f5bb5)}
+.ic-term{background:linear-gradient(160deg,#2a3443,#0d1117)}
+.ic-maze{background:linear-gradient(160deg,#c46b4a,#7a3523)}
+.ic-hotel{background:linear-gradient(160deg,#2fc7a7,#0f7a6a)}
+.ic-ga{background:linear-gradient(160deg,#f2c14e,#d9822b)}
+.ic-mail{background:linear-gradient(160deg,#e9eef5,#b7c4d6)}
+.ic-cv{background:linear-gradient(160deg,#ffffff,#dfe5ec);border-radius:8px}
+
+/* ---------- dock ---------- */
+.dock{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:8999;display:flex;align-items:flex-end;gap:8px;padding:8px 10px;border-radius:22px;background:var(--dock);backdrop-filter:blur(22px) saturate(1.5);-webkit-backdrop-filter:blur(22px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 18px 40px -12px rgba(0,0,0,.55)}
+.dock button{position:relative;display:grid;justify-items:center}
+.dock .ic{width:54px;height:54px;transition:transform .18s cubic-bezier(.2,.8,.2,1)}
+.dock button:hover .ic{transform:translateY(-8px) scale(1.12)}
+.dock button::after{content:"";position:absolute;bottom:-6px;width:4px;height:4px;border-radius:50%;background:#e8edf5;opacity:0;transition:opacity .2s}
+.dock button[data-open]::after{opacity:1}
+.dock .tip{position:absolute;bottom:72px;white-space:nowrap;padding:4px 10px;border-radius:7px;background:rgba(15,26,42,.92);color:#fff;font-size:12px;opacity:0;pointer-events:none;transition:opacity .15s}
+.dock button:hover .tip{opacity:1}
+.dock .sep{width:1px;align-self:stretch;margin:6px 2px;background:rgba(255,255,255,.22)}
+.bounce .ic{animation:bounce .6s cubic-bezier(.3,.6,.4,1)}
+@keyframes bounce{0%,100%{transform:none}35%{transform:translateY(-16px)}70%{transform:translateY(-4px)}}
+
+/* ---------- windows ---------- */
+.win{position:fixed;display:flex;flex-direction:column;min-width:320px;min-height:220px;background:var(--win);border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px rgba(15,26,42,.12),0 28px 70px -20px rgba(0,0,0,.6),0 10px 24px -12px rgba(0,0,0,.4);animation:winIn .26s cubic-bezier(.2,.8,.2,1);user-select:text}
+.win.closing{animation:winOut .18s ease-in forwards}
+@keyframes winIn{from{opacity:0;transform:scale(.94) translateY(10px)}}
+@keyframes winOut{to{opacity:0;transform:scale(.94) translateY(8px)}}
+.win.blur .titlebar{background:#eef1f5}
+.win.blur .lights span{background:#cfd5dd}
+.win.max{border-radius:0}
+.titlebar{flex:none;height:42px;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--win-2);border-bottom:1px solid var(--line);cursor:grab;user-select:none;touch-action:none}
+.titlebar:active{cursor:grabbing}
+.lights{display:flex;gap:8px}
+.lights span{width:13px;height:13px;padding:0;border-radius:50%;display:grid;place-items:center;color:transparent;font:700 9px/1 var(--text);cursor:pointer}
+.lights .l-c{background:#ff5f57}.lights .l-m{background:#febc2e}.lights .l-x{background:#28c840}
+.lights:hover span{color:rgba(0,0,0,.55)}
+.titlebar h2{flex:1;text-align:center;font:600 13px/1 var(--text);color:var(--muted);margin-right:56px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.body{flex:1;overflow:auto;min-height:0}
+.body.pad{padding:24px 28px}
+.win.dark{background:var(--term)}
+.win.dark .titlebar{background:#161b22;border-color:#222b36}
+.win.dark .titlebar h2{color:#8b98a9}
+.resize{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;touch-action:none}
+
+/* ---------- about ---------- */
+.about{display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px}
+.ph{width:200px;height:200px;border-radius:20px;background:var(--sand);overflow:hidden;position:relative}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 8%;transform:scale(1.25) translateY(9%)}
+.about h1{font:700 40px/1 var(--display);letter-spacing:-.025em}
+.about .ar{font:600 20px/1.5 "Plex Arabic",sans-serif;color:var(--faint);margin-top:4px}
+.about .role{font-weight:600;margin-top:10px;font-size:16px}
+.about p.bio{color:var(--muted);margin-top:10px;max-width:60ch}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.facts span{padding:5px 11px;border-radius:999px;background:var(--accent-soft);color:#1a4a92;font:500 12.5px/1.3 var(--text)}
+.sect{margin-top:26px}
+.sect h3{font:600 12px/1 var(--text);letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+.tl{display:grid;gap:14px;border-left:2px solid var(--line);padding-left:18px}
+.tl li{position:relative}
+.tl li::before{content:"";position:absolute;left:-25px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--win);border:2px solid var(--accent)}
+.tl b{display:block;font-weight:600}
+.tl small{color:var(--faint);font-size:13px}
+.tl p{color:var(--muted);font-size:14px;margin-top:2px}
+.note{margin-top:22px;display:grid;grid-template-columns:120px minmax(0,1fr);gap:16px;align-items:center;padding:14px 16px;border-radius:12px;background:#fff7e3;border:1px solid #f0dfb0}
+.note b{font:600 14px/1.3 var(--text)}
+.note p{font-size:13.5px;color:#6b5a33;margin-top:2px}
+
+/* ---------- finder ---------- */
+.finder{display:grid;grid-template-columns:190px minmax(0,1fr);height:100%}
+.side{background:var(--win-2);border-right:1px solid var(--line);padding:16px 10px;display:grid;align-content:start;gap:2px}
+.side h4{font:600 11px/1 var(--text);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:6px 10px 8px}
+.side button{text-align:left;padding:7px 10px;border-radius:8px;font-size:13.5px;color:var(--muted)}
+.side button[aria-pressed="true"]{background:var(--accent-soft);color:#1a4a92;font-weight:600}
+.side button:hover{background:#e6ebf2}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:18px;align-content:start}
+.proj-tile{display:grid;gap:8px;padding:8px;border-radius:12px;text-align:left;transition:background-color .15s}
+.proj-tile:hover,.proj-tile[aria-selected="true"]{background:var(--accent-soft)}
+.proj-tile .thumb{aspect-ratio:16/10;border-radius:8px;overflow:hidden;background:var(--sand);border:1px solid var(--line)}
+.proj-tile .thumb img,.proj-tile .thumb svg{width:100%;height:100%;object-fit:cover}
+.proj-tile b{font-size:13.5px;font-weight:600;line-height:1.3}
+.proj-tile small{color:var(--faint);font-size:12px}
+.detail{padding:24px 28px;display:grid;gap:14px;align-content:start}
+.detail .hero-img{aspect-ratio:16/7;max-height:260px;border-radius:12px;overflow:hidden;background:var(--sand);border:1px solid var(--line)}
+.detail .hero-img img,.detail .hero-img svg{width:100%;height:100%;object-fit:cover}
+.detail h2{font:700 28px/1.1 var(--display);letter-spacing:-.02em}
+.detail .sub{color:var(--faint);font-size:13.5px}
+.detail p{color:var(--muted);max-width:62ch}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips li{padding:5px 10px;border-radius:999px;background:var(--win-2);border:1px solid var(--line);font-size:12.5px;font-weight:500;color:var(--ink)}
+.stat{display:flex;align-items:baseline;gap:8px}
+.stat b{font:700 30px/1 var(--display);color:var(--accent)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:10px;font-weight:600;font-size:13.5px;text-decoration:none;transition:background-color .15s,transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--accent);color:#fff}
+.btn-p:hover{background:#1a4a92}
+.btn-g{background:var(--win-2);border:1px solid var(--line)}
+.btn-g:hover{background:#e6ebf2}
+.back{display:inline-flex;justify-self:start}
+.finder.showing .grid{display:none}
+.finder:not(.showing) .detail{display:none}
+
+/* ---------- terminal ---------- */
+.term{height:100%;padding:14px 16px;font:13.5px/1.6 var(--mono);color:var(--term-ink);overflow:auto;cursor:text}
+.term .ln{white-space:pre-wrap;word-break:break-word}
+.term .g{color:var(--term-green)} .term .b{color:var(--term-blue)} .term .s{color:var(--term-sand)} .term .d{color:#7d8a9c}
+.term a{color:var(--term-blue)}
+.term .prompt{display:flex;gap:8px}
+.term input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--term-ink);font:inherit;caret-color:var(--term-green)}
+
+/* ---------- maze ---------- */
+.maze{height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;background:#0b0f16;color:#dfe7f2}
+.maze canvas{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;display:block;background:#0b0f16}
+.maze .hud{display:flex;align-items:center;gap:14px;padding:10px 14px;font-size:13px;background:#111823;color:#b8c4d4;flex-wrap:wrap}
+.maze .hud b{color:#fff;font-variant-numeric:tabular-nums}
+.pad-ctl{display:none;gap:6px;margin-left:auto}
+.pad-ctl button{width:44px;height:44px;border-radius:10px;background:#1d2736;color:#fff;font-size:18px;touch-action:none}
+.maze .stage{position:relative;min-height:0}
+.maze .msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;background:rgba(8,12,18,.7);padding:20px}
+.maze .msg h3{font:700 26px/1.1 var(--display)}
+.maze .msg p{color:#b8c4d4;margin-top:6px;max-width:40ch}
+.maze .msg .btn{margin-top:14px}
+
+/* ---------- hotel bot ---------- */
+.chat{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.chat .banner{padding:10px 16px;background:#e8f7f3;color:#0f5c50;font-size:12.5px;border-bottom:1px solid #cdeee5}
+.msgs{overflow:auto;padding:18px;display:grid;gap:12px;align-content:start}
+.m{max-width:85%;padding:10px 14px;border-radius:14px;font-size:14px}
+.m.u{justify-self:end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.m.b{background:var(--win-2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.trace{margin-top:8px;padding:8px 10px;border-radius:8px;background:#0d1117;color:#c8d6e5;font:12px/1.55 var(--mono)}
+.trace i{font-style:normal;color:#7ee2a8}
+.hotels{display:grid;gap:8px;margin-top:8px}
+.hotel{padding:9px 11px;border-radius:10px;background:#fff;border:1px solid var(--line)}
+.hotel b{font-size:13.5px}
+.hotel small{display:block;color:var(--faint);font-size:12px}
+.suggest{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px}
+.suggest button{padding:6px 11px;border-radius:999px;background:#e8f7f3;color:#0f5c50;font-size:12.5px;font-weight:500}
+.compose{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.compose input{flex:1;min-width:0;height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);font:inherit;background:#fff;color:var(--ink)}
+
+/* ---------- GA lab ---------- */
+.ga{display:grid;gap:16px}
+.ga label{font-weight:600;font-size:13.5px}
+.ga .row{display:flex;gap:8px;flex-wrap:wrap}
+.ga input{flex:1;min-width:0;height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);font:inherit;background:#fff;color:var(--ink)}
+.best{font:600 clamp(22px,3.4vw,34px)/1.2 var(--mono);letter-spacing:.02em;padding:16px 18px;border-radius:12px;background:#0d1117;color:#e8edf5;min-height:72px;word-break:break-all}
+.best .ok{color:#7ee2a8}
+.gstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.gstats div{padding:10px 12px;border-radius:10px;background:var(--win-2);border:1px solid var(--line)}
+.gstats b{display:block;font:700 20px/1.2 var(--display);font-variant-numeric:tabular-nums}
+.gstats small{color:var(--faint);font-size:12px}
+.pop{font:12px/1.5 var(--mono);color:var(--muted);max-height:150px;overflow:auto;padding:10px 12px;border-radius:10px;background:var(--win-2);border:1px solid var(--line);white-space:pre}
+.chart{width:100%;height:90px}
+
+/* ---------- mail ---------- */
+.mail h2{font:700 28px/1.15 var(--display);letter-spacing:-.02em}
+.mail p{color:var(--muted);margin-top:8px;max-width:52ch}
+.mail .addr{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mail code{padding:10px 14px;border-radius:10px;background:var(--win-2);border:1px solid var(--line);font:500 15px/1 var(--text);user-select:all}
+.mail .links{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- boot ---------- */
+#boot{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#05090f;color:#c9d6e6;transition:opacity .5s}
+#boot.gone{opacity:0;pointer-events:none}
+#boot .box{width:min(520px,86vw)}
+#boot h1{font:700 34px/1 var(--display);letter-spacing:-.02em;color:#fff}
+#boot pre{font:13px/1.7 var(--mono);margin:16px 0 0;min-height:140px;color:#8fa3bb;white-space:pre-wrap}
+#boot .bar{height:4px;border-radius:2px;background:#16202e;overflow:hidden;margin-top:14px}
+#boot .bar i{display:block;height:100%;width:0;background:#8db7ff;transition:width .2s}
+#boot small{display:block;margin-top:12px;color:#5d6e84;font-size:12px}
+
+/* ---------- phone ---------- */
+@media (max-width:760px){
+  .menubar .menus,.menubar .app-name{display:none}
+  .wall-name{left:24px;right:24px;text-align:left;bottom:auto;top:62px}
+  .wall-name b{font-size:44px}
+  .icons{top:auto;bottom:calc(104px + env(safe-area-inset-bottom,0px));left:16px;right:16px;height:auto;grid-auto-flow:row;grid-template-rows:none;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+  .dicon{width:auto}
+  .dicon .ic{width:58px;height:58px}
+  .dock .ic{width:50px;height:50px}
+  .dock .extra{display:none}
+  .win{left:0!important;top:calc(32px + env(safe-area-inset-top,0px))!important;width:100%!important;height:calc(100% - 32px - env(safe-area-inset-top,0px))!important;border-radius:16px 16px 0 0}
+  .resize{display:none}
+  body.has-win .dock,body.has-win .icons{display:none}
+  .about{grid-template-columns:minmax(0,1fr)}
+  .ph{width:140px;height:140px}
+  .finder{grid-template-columns:minmax(0,1fr)}
+  .side{display:none}
+    .pad-ctl{display:flex}
+  .gstats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .note{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="wall" aria-hidden="true"></canvas>
+<div class="wall-name" aria-hidden="true"><b>Omar Tamer</b><i lang="ar">عمر تامر</i><span>Software engineer · Cairo</span></div>
+
+<div id="boot" role="status" aria-live="polite"><div class="box"><h1>OmarOS</h1><pre id="bootlog"></pre><div class="bar"><i id="bootbar"></i></div><small>Click anywhere to skip</small></div></div>
+
+<header class="menubar">
+  <span class="logo"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="#e9e2d6" stroke-width="2"/><circle cx="8" cy="8" r="2.6" fill="#8db7ff"/></svg>OmarOS</span>
+  <span class="app-name" id="appName">Finder</span>
+  <nav class="menus" aria-label="Quick open">
+    <button data-open="about">About</button>
+    <button data-open="projects">Projects</button>
+    <button data-open="term">Terminal</button>
+    <button data-open="mail">Contact</button>
+  </nav>
+  <div class="right"><span class="pill">Open to work</span><span id="clock">Cairo</span></div>
+</header>
+
+<h1 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Omar Tamer, software engineer in Cairo. Portfolio as a desktop.</h1>
+
+<div class="icons" id="icons"></div>
+<nav class="dock" id="dock" aria-label="Dock"></nav>
+<div id="windows"></div>
+
+<script>
+/* ======================= content ======================= */
+const ICONS = {
+  about:'<svg viewBox="0 0 24 24" fill="none" stroke="#5b4628" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c1.2-3.6 4-5.4 7-5.4s5.8 1.8 7 5.4"/></svg>',
+  projects:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M3 7.5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
+  term:'<svg viewBox="0 0 24 24" fill="none" stroke="#7ee2a8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 4 4-4 4M12 17h7"/></svg>',
+  maze:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 4h16v16H4zM4 9h6M14 4v6h6M9 14v6M14 14h6M14 14v3"/></svg>',
+  hotel:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-4 3v-3H6a2 2 0 0 1-2-2Z"/><path d="M8.5 10h.01M12 10h.01M15.5 10h.01"/></svg>',
+  ga:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M7 3c0 6 10 6 10 12s-10 6-10 6M17 3c0 6-10 6-10 12M8 7h8M8 17h8"/></svg>',
+  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="#1f5bb5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>',
+  cv:'<svg viewBox="0 0 24 24" fill="none" stroke="#c4221a" stroke-width="2" stroke-linecap="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 15h5M10 18h3"/></svg>'
+};
+const APPS = {
+  about:{title:'About Omar', icon:'about', w:760, h:620},
+  projects:{title:'Projects', icon:'projects', w:900, h:600},
+  term:{title:'omar@cairo: ~', icon:'term', w:680, h:440, dark:true},
+  maze:{title:'Maze Runner (playable)', icon:'maze', w:720, h:520, dark:true},
+  hotel:{title:'Hotel Assistant (demo)', icon:'hotel', w:520, h:620},
+  ga:{title:'Genetic Algorithm Lab', icon:'ga', w:680, h:620},
+  mail:{title:'Contact', icon:'mail', w:560, h:380},
+};
+const DESKTOP = [['about','About Me'],['projects','Projects'],['term','Terminal'],['maze','Maze.app'],['hotel','HotelBot.app'],['ga','GA Lab.app'],['mail','Contact'],['cv','Resume.pdf']];
+const DOCK = [['about','About Me'],['projects','Projects'],['term','Terminal'],['maze','Maze'],['hotel','Hotel Bot'],['ga','GA Lab'],['mail','Contact']];
+
+const THESIS_SVG = `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice"><rect width="320" height="200" fill="#e9e2d6"/><g fill="none" stroke="#0f1a2a" stroke-width="3"><ellipse cx="88" cy="96" rx="40" ry="50"/><path d="M68 86h12M96 86h12M80 116q8 8 16 0"/></g><g fill="#1f5bb5"><circle cx="70" cy="86" r="3"/><circle cx="106" cy="86" r="3"/><circle cx="88" cy="102" r="3"/><circle cx="76" cy="118" r="3"/><circle cx="100" cy="118" r="3"/><circle cx="88" cy="146" r="3"/><circle cx="52" cy="96" r="3"/><circle cx="124" cy="96" r="3"/></g><path d="M146 100h28" stroke="#0f1a2a" stroke-width="3"/><path d="m168 92 8 8-8 8" fill="none" stroke="#0f1a2a" stroke-width="3"/><g fill="none" stroke="#0f1a2a" stroke-width="5" stroke-linecap="round"><ellipse cx="240" cy="96" rx="44" ry="54" fill="#fbfcfd"/><path d="M214 84q8-8 16 0M250 84q8-8 16 0M222 118q18 18 36 0"/></g></svg>`;
+const DB_SVG = `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice"><rect width="320" height="200" fill="#0f1a2a"/><g fill="#1f5bb5" stroke="#8db7ff" stroke-width="2"><rect x="130" y="30" width="60" height="28" rx="5"/><rect x="50" y="100" width="60" height="28" rx="5"/><rect x="130" y="100" width="60" height="28" rx="5"/><rect x="210" y="100" width="60" height="28" rx="5"/></g><g stroke="#8db7ff" stroke-width="2"><path d="M150 58 80 100M160 58v42M170 58l70 42"/></g><g fill="#e9e2d6"><rect x="40" y="160" width="30" height="16" rx="3"/><rect x="90" y="160" width="30" height="16" rx="3"/><rect x="145" y="160" width="30" height="16" rx="3"/><rect x="200" y="160" width="30" height="16" rx="3"/><rect x="250" y="160" width="30" height="16" rx="3"/></g></svg>`;
+const TLOU_SVG = `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice"><rect width="320" height="200" fill="#1d2a1f"/><g stroke="#33463a" stroke-width="1">${Array.from({length:16},(_,i)=>`<path d="M${i*20} 0v200"/>`).join('')}${Array.from({length:10},(_,i)=>`<path d="M0 ${i*20}h320"/>`).join('')}</g><rect x="60" y="80" width="20" height="20" fill="#e9e2d6"/><rect x="200" y="40" width="20" height="20" fill="#c46b4a"/><rect x="240" y="120" width="20" height="20" fill="#c46b4a"/><rect x="140" y="140" width="20" height="20" fill="#7ee2a8"/></svg>`;
+const JOAL_SVG = `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice"><rect width="320" height="200" fill="#fff4e0"/><g fill="none" stroke="#c4221a" stroke-width="6" stroke-linejoin="round"><path d="M160 150s-50-30-50-62a26 26 0 0 1 50-10 26 26 0 0 1 50 10c0 32-50 62-50 62Z"/></g></svg>`;
+
+const PROJECTS = [
+  {id:'thesis', cat:'ai', name:'Cartoonizing Images with Genetic Algorithms', short:'Thesis: portrait cartoonizer', when:"Bachelor's thesis · Feb – Jun 2025", img:THESIS_SVG,
+   text:'A web app that turns portraits into cartoons. AnimeGANv2 sets the style, 468 MediaPipe face landmarks drive the exaggeration, and a genetic algorithm (PyGAD) searches for the settings that keep the face recognisable. Real-time sliders and optional GPU acceleration. Graded Excellent.',
+   stat:['+20%','structural similarity (SSIM) over the baseline'], stack:['Python','PyTorch','Flask','React','MediaPipe','PyGAD'], repo:'https://github.com/omartamerr10/Cartoonizing-Images', demo:['ga','Try the GA Lab']},
+  {id:'hotel', cat:'ai', name:'Hotel Travel Assistant', short:'AI hotel chatbot', when:'AI chatbot · Fall 2024', img:'<img src="../assets/img/hotel.jpg" alt="SHAP chart of the features that drive the model">',
+   text:'Ask for a hotel in plain language. A Groq LLM classifies the intent, FAISS with sentence transformers runs semantic search, and Neo4j answers graph questions. I explained the model with SHAP and LIME; that is the chart.',
+   stack:['Python','Groq LLM','FAISS','Neo4j','Streamlit','SHAP'], repo:'https://github.com/omartamerr10/hotel-travel-assistant', demo:['hotel','Chat with the demo']},
+  {id:'duck', cat:'web', name:'Ducksplorer', short:'MERN travel planner', when:'Full-stack web app · Winter 2024', img:'<img src="../assets/img/ducksplorer.jpg" alt="Ducksplorer duck explorer emblem">',
+   text:'Plan a trip end to end: book hotels and activities in real time, keep it inside a budget and get notified when plans change.',
+   stack:['MongoDB','Express','React','Node.js'], repo:'https://github.com/omartamerr10/ducksplorer-travel-planner'},
+  {id:'maze', cat:'games', name:'3D Maze Runner', short:'C++ / OpenGL game', when:'Game · Dec 2024', img:'<img src="../assets/img/maze.jpg" alt="Brick texture from the game">',
+   text:'An infinite runner in C++ with real-time lighting, materials and 3D model loading. The playable Maze.app on this desktop is a small browser tribute built with the game\'s own textures.',
+   stack:['C++','OpenGL','GLUT'], repo:'https://github.com/omartamerr10/3d-maze-runner-opengl', demo:['maze','Play Maze.app']},
+  {id:'db', cat:'systems', name:'JavaXSQL Database Engine', short:'DB engine with B+ trees', when:'Systems · Mar – Jun 2024', img:DB_SVG,
+   text:'A database engine written in Java with SQL-like syntax and B+ tree indexes for fast lookups.', stack:['Java','B+ trees','SQL']},
+  {id:'tlou', cat:'games', name:'The Last of Us: Legacy', short:'Turn-based survival game', when:'Game · Mar – Jun 2023', img:TLOU_SVG,
+   text:'A turn-based survival game on a zombie grid. Play as an Explorer, Fighter or Medic and manage action points, vaccines and armour.', stack:['Java','OOP'], repo:'https://github.com/omartamerr10/last-of-us-legacy'},
+  {id:'joal', cat:'web', name:'JOAL Charity Platform', short:'NGO and donor platform', when:'Web app · Mar – Jun 2024', img:JOAL_SVG,
+   text:'A React platform where NGOs and donors exchange goods and charitable contributions.', stack:['React','JavaScript'], repo:'https://github.com/omartamerr10/joal-charity-platform'},
+];
+const EMAIL = 'omartamer1009@gmail.com';
+
+/* ======================= window manager ======================= */
+const $ = (s, r=document) => r.querySelector(s);
+const winLayer = $('#windows');
+const isPhone = () => innerWidth <= 760;
+let z = 100, openWins = {}, cascade = 0;
+
+function el(html){ const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+function iconHTML(k){ return `<span class="ic ic-${k}" aria-hidden="true">${ICONS[k]}</span>`; }
+
+function focusWin(w){
+  Object.values(openWins).forEach(o => o.el.classList.add('blur'));
+  w.classList.remove('blur'); w.style.zIndex = ++z;
+  $('#appName').textContent = APPS[w.dataset.app].title.split(' (')[0];
+}
+function open(app){
+  if (app === 'cv') { window.open('../assets/Omar-Tamer-CV.pdf', '_blank', 'noopener'); return; }
+  if (openWins[app]) { focusWin(openWins[app].el); return openWins[app]; }
+  const A = APPS[app];
+  const W = Math.min(A.w, innerWidth - 40), H = Math.min(A.h, innerHeight - 140);
+  const x = Math.max(16, (innerWidth - W)/2 + (cascade%5)*28 - 56), y = Math.max(44, (innerHeight - H)/2 - 30 + (cascade%5)*24 - 40);
+  cascade++;
+  const w = el(`<section class="win ${A.dark?'dark':''}" role="dialog" aria-label="${A.title}" data-app="${app}" style="left:${x}px;top:${y}px;width:${W}px;height:${H}px">
+    <div class="titlebar"><div class="lights"><button class="c" aria-label="Close" title="Close"><span class="c">×</span></button></div><h2>${A.title}</h2></div>
+    <div class="body"></div><div class="resize" aria-hidden="true"></div></section>`);
+  // traffic lights: close, minimise, maximise
+  const lights = w.querySelector('.lights'); lights.innerHTML = '<span class="l-c" role="button" tabindex="0" aria-label="Close">×</span><span class="l-m" role="button" tabindex="0" aria-label="Minimise">–</span><span class="l-x" role="button" tabindex="0" aria-label="Maximise">+</span>';
+  winLayer.appendChild(w);
+  const body = w.querySelector('.body');
+  const ctx = { el:w, body, cleanup:[] };
+  openWins[app] = ctx;
+  RENDER[app](body, ctx);
+  focusWin(w);
+  w.addEventListener('pointerdown', () => focusWin(w));
+  dragify(w); resizable(w);
+  const act = (cls, fn) => { const b = lights.querySelector('.'+cls); b.addEventListener('click', e => { e.stopPropagation(); fn(); }); b.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); fn(); } }); };
+  act('l-c', () => close(app));
+  act('l-m', () => close(app));
+  act('l-x', () => toggleMax(w));
+  w.querySelector('.titlebar').addEventListener('dblclick', () => toggleMax(w));
+  markDock();
+  const db = document.querySelector(`.dock [data-app="${app}"]`); if (db) { db.classList.remove('bounce'); void db.offsetWidth; db.classList.add('bounce'); }
+  return ctx;
+}
+function close(app){
+  const o = openWins[app]; if (!o) return;
+  o.cleanup.forEach(f => f()); delete openWins[app];
+  o.el.classList.add('closing'); setTimeout(() => o.el.remove(), 180);
+  markDock();
+  const rest = Object.values(openWins); if (rest.length) focusWin(rest[rest.length-1].el); else $('#appName').textContent = 'Finder';
+}
+function toggleMax(w){
+  if (isPhone()) return;
+  if (w.dataset.prev) { Object.assign(w.style, JSON.parse(w.dataset.prev)); delete w.dataset.prev; w.classList.remove('max'); }
+  else { w.dataset.prev = JSON.stringify({left:w.style.left,top:w.style.top,width:w.style.width,height:w.style.height}); Object.assign(w.style,{left:'0px',top:'32px',width:innerWidth+'px',height:(innerHeight-32)+'px'}); w.classList.add('max'); }
+  w.dispatchEvent(new Event('winresize'));
+}
+function dragify(w){
+  const bar = w.querySelector('.titlebar'); let sx, sy, ox, oy, on = false;
+  bar.addEventListener('pointerdown', e => { if (isPhone() || e.target.closest('.lights')) return; on = true; sx = e.clientX; sy = e.clientY; ox = w.offsetLeft; oy = w.offsetTop; bar.setPointerCapture(e.pointerId); });
+  bar.addEventListener('pointermove', e => { if (!on) return; w.style.left = Math.min(innerWidth-80, Math.max(-w.offsetWidth+120, ox + e.clientX - sx)) + 'px'; w.style.top = Math.min(innerHeight-60, Math.max(32, oy + e.clientY - sy)) + 'px'; });
+  bar.addEventListener('pointerup', () => on = false);
+}
+function resizable(w){
+  const h = w.querySelector('.resize'); let sx, sy, ow, oh, on = false;
+  h.addEventListener('pointerdown', e => { on = true; sx = e.clientX; sy = e.clientY; ow = w.offsetWidth; oh = w.offsetHeight; h.setPointerCapture(e.pointerId); e.stopPropagation(); });
+  h.addEventListener('pointermove', e => { if (!on) return; w.style.width = Math.max(320, ow + e.clientX - sx) + 'px'; w.style.height = Math.max(220, oh + e.clientY - sy) + 'px'; w.dispatchEvent(new Event('winresize')); });
+  h.addEventListener('pointerup', () => on = false);
+}
+function markDock(){ document.querySelectorAll('.dock [data-app]').forEach(b => b.toggleAttribute('data-open', !!openWins[b.dataset.app])); document.body.classList.toggle('has-win', Object.keys(openWins).length > 0); }
+
+/* ======================= apps ======================= */
+const RENDER = {};
+
+RENDER.about = (b) => {
+  b.classList.add('pad');
+  b.innerHTML = `<div class="about">
+    <div class="ph"><img src="../assets/img/omar-cutout.webp" alt="Portrait of Omar Tamer" width="720" height="742"></div>
+    <div>
+      <h1>Omar Tamer</h1><p class="ar" lang="ar" dir="rtl" style="text-align:left">عمر تامر</p>
+      <p class="role">Software engineer in Cairo, open to graduate and junior roles</p>
+      <p class="bio">I build full-stack apps, AI systems and the odd 3D game. I graduated in Computer Science and Engineering from the German University in Cairo, worked on ERP modules clients run every day, and wrote a thesis where a genetic algorithm tunes a deep-learning cartoonizer.</p>
+      <div class="facts"><span>GUC, class of 2026</span><span>Thesis graded Excellent</span><span>Arabic · English · French</span><span>German and Spanish, fair</span></div>
+    </div></div>
+    <div class="sect"><h3>Experience</h3><ol class="tl">
+      <li><b>Junior Software Developer, I-Axiom Cloud ERP</b><small>Apr – Sep 2025</small><p>ERP modules for client companies in C#, .NET and Oracle: SQL, stored procedures, CRUD flows, and Razor Pages dashboards with pagination and filtering.</p></li>
+      <li><b>Pathfinder Intern, BSH Home Appliances Egypt</b><small>Summer 2024</small><p>Rotations through IT, marketing, logistics and HR, including factory IT infrastructure.</p></li>
+      <li><b>B.Sc. Computer Science and Engineering, German University in Cairo</b><small>2021 – 2026</small><p>Overall grade Very Good.</p></li>
+    </ol></div>
+    <div class="note">
+      <svg viewBox="0 0 400 210" aria-hidden="true"><rect width="400" height="210" rx="10" fill="#f3e6c4"/><rect width="400" height="5" fill="#6b5a33"/><rect x="178" width="44" height="12" rx="2" fill="#6b5a33"/><path d="M80 5a120 120 0 0 0 240 0Z" fill="#fff7e3" stroke="#6b5a33" stroke-width="3"/><path d="M26 5a174 174 0 0 0 348 0" fill="none" stroke="#6b5a33" stroke-width="3" stroke-dasharray="9 8"/><circle cx="356" cy="44" r="13" fill="#1f5bb5"/></svg>
+      <div><b>Off the keyboard: right wing</b><p>Professional handball in Egypt's premier league since 2013. Played the Partille Cup in Sweden and won silver at the Egyptian Universities Championship.</p></div>
+    </div>
+    <div class="actions" style="margin-top:20px"><button class="btn btn-p" data-go="projects">See my projects</button><button class="btn btn-g" data-go="term">Open the terminal</button><a class="btn btn-g" href="../assets/Omar-Tamer-CV.pdf" target="_blank" rel="noopener">Résumé (PDF)</a></div>`;
+  b.querySelectorAll('[data-go]').forEach(x => x.addEventListener('click', () => open(x.dataset.go)));
+};
+
+RENDER.projects = (b, ctx) => {
+  b.innerHTML = `<div class="finder"><aside class="side"><h4>Folders</h4>
+    <button data-cat="all" aria-pressed="true">All projects</button><button data-cat="ai" aria-pressed="false">AI and ML</button><button data-cat="web" aria-pressed="false">Web apps</button><button data-cat="games" aria-pressed="false">Games</button><button data-cat="systems" aria-pressed="false">Systems</button>
+    <h4 style="margin-top:16px">Elsewhere</h4><button data-href="https://github.com/omartamerr10">GitHub ↗</button></aside>
+    <div style="overflow:auto;min-height:0"><div class="grid" role="listbox" aria-label="Projects"></div><div class="detail"></div></div></div>`;
+  const grid = b.querySelector('.grid'), detail = b.querySelector('.detail'), finder = b.querySelector('.finder');
+  const show = (p) => {
+    grid.querySelectorAll('.proj-tile').forEach(t => t.setAttribute('aria-selected', String(t.dataset.id === p.id)));
+    detail.innerHTML = `<button class="btn btn-g back">← All projects</button><div class="hero-img">${p.img}</div><div><h2>${p.name}</h2><p class="sub">${p.when}</p></div><p>${p.text}</p>
+      ${p.stat ? `<div class="stat"><b>${p.stat[0]}</b><span>${p.stat[1]}</span></div>` : ''}
+      <ul class="chips">${p.stack.map(s => `<li>${s}</li>`).join('')}</ul>
+      <div class="actions">${p.demo ? `<button class="btn btn-p" data-go="${p.demo[0]}">${p.demo[1]}</button>` : ''}${p.repo ? `<a class="btn btn-g" href="${p.repo}" target="_blank" rel="noopener">Code on GitHub ↗</a>` : ''}</div>`;
+    detail.querySelector('[data-go]')?.addEventListener('click', e => open(e.currentTarget.dataset.go));
+    detail.querySelector('.back').addEventListener('click', () => finder.classList.remove('showing'));
+    finder.classList.add('showing');
+  };
+  const fill = (cat) => {
+    grid.innerHTML = '';
+    PROJECTS.filter(p => cat === 'all' || p.cat === cat).forEach(p => {
+      const t = el(`<button class="proj-tile" role="option" data-id="${p.id}"><span class="thumb">${p.img}</span><b>${p.name}</b><small>${p.short}</small></button>`);
+      t.addEventListener('click', () => show(p)); grid.appendChild(t);
+    });
+  };
+  b.querySelectorAll('.side [data-cat]').forEach(x => x.addEventListener('click', () => { b.querySelectorAll('.side [data-cat]').forEach(y => y.setAttribute('aria-pressed', String(y === x))); fill(x.dataset.cat); }));
+  b.querySelector('[data-href]').addEventListener('click', e => window.open(e.currentTarget.dataset.href, '_blank', 'noopener'));
+  fill('all');
+  ctx.show = (id) => show(PROJECTS.find(p => p.id === id));
+  // on desktop show grid and detail stacked: grid on top, detail below
+};
+
+RENDER.mail = (b) => {
+  b.classList.add('pad');
+  b.innerHTML = `<div class="mail"><h2>Let's build something together</h2><p>I'm looking for graduate and junior software roles in Cairo or remote. Email is the fastest way to reach me.</p>
+    <div class="addr"><code>${EMAIL}</code><button class="btn btn-p" id="cp">Copy email</button></div>
+    <div class="links"><a class="btn btn-g" href="mailto:${EMAIL}">Open in mail app</a><a class="btn btn-g" href="https://linkedin.com/in/omar-tamer-farouk" target="_blank" rel="noopener">LinkedIn ↗</a><a class="btn btn-g" href="https://github.com/omartamerr10" target="_blank" rel="noopener">GitHub ↗</a></div></div>`;
+  const cp = b.querySelector('#cp');
+  cp.addEventListener('click', async () => { try { await navigator.clipboard.writeText(EMAIL); cp.textContent = 'Copied'; } catch { const r = document.createRange(); r.selectNodeContents(b.querySelector('code')); getSelection().removeAllRanges(); getSelection().addRange(r); cp.textContent = 'Selected, press Ctrl+C'; } setTimeout(() => cp.textContent = 'Copy email', 2000); });
+};
+
+/* ---------- terminal ---------- */
+RENDER.term = (b, ctx) => {
+  b.innerHTML = `<div class="term"><div class="out"></div><div class="prompt"><span class="g">omar@cairo</span><span class="d">~ $</span><input aria-label="Terminal command" autocomplete="off" autocapitalize="off" spellcheck="false"></div></div>`;
+  const term = b.querySelector('.term'), out = b.querySelector('.out'), input = b.querySelector('input');
+  const hist = []; let hi = 0;
+  const print = (html) => { out.insertAdjacentHTML('beforeend', `<div class="ln">${html}</div>`); term.scrollTop = term.scrollHeight; };
+  const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const CMDS = {
+    help: () => print(`<span class="s">Commands</span>
+  <span class="b">whoami</span>        who I am
+  <span class="b">neofetch</span>      the system, but it's me
+  <span class="b">ls</span>            list my projects
+  <span class="b">cat</span> <span class="d">&lt;project&gt;</span> details, e.g. <span class="d">cat thesis</span>
+  <span class="b">experience</span>    where I've worked
+  <span class="b">skills</span>        what I work with
+  <span class="b">open</span> <span class="d">&lt;app&gt;</span>    about, projects, maze, hotel, ga, contact, cv
+  <span class="b">contact</span>       how to reach me
+  <span class="b">clear</span>         clear the screen
+  <span class="d">There's also a command for recruiters. Try sudo.</span>`),
+    whoami: () => print(`Omar Tamer. Software engineer in Cairo, GUC '26.
+Full-stack apps, AI systems and 3D games. Right wing on the handball court.`),
+    neofetch: () => print(`<span class="b">   ██████   </span>  <span class="g">omar</span>@<span class="g">cairo</span>
+<span class="b"> ██      ██ </span>  ---------------
+<span class="b">██   ██   ██</span>  <span class="s">OS</span>       OmarOS 2026 (GUC build)
+<span class="b">██  ████  ██</span>  <span class="s">Role</span>     Software engineer
+<span class="b">██   ██   ██</span>  <span class="s">Uptime</span>   13 seasons of handball
+<span class="b"> ██      ██ </span>  <span class="s">Shell</span>    Python, JavaScript, Java, C#, C++
+<span class="b">   ██████   </span>  <span class="s">Memory</span>   PostgreSQL, MongoDB, Redis, Neo4j
+              <span class="s">Locale</span>   ar, en, fr (de, es fair)
+              <span class="s">Status</span>   <span class="g">open to work</span>`),
+    ls: () => print(PROJECTS.map(p => `<span class="b">${p.id.padEnd(8)}</span> ${esc(p.name)}`).join('\n') + `\n<span class="d">cat &lt;name&gt; for details</span>`),
+    cat: (a) => { const p = PROJECTS.find(p => p.id === a); if (!p) return print(`cat: ${esc(a||'')}: no such project. Try <span class="b">ls</span>`); print(`<span class="s">${esc(p.name)}</span>  <span class="d">${p.when}</span>\n${esc(p.text)}\n<span class="d">stack:</span> ${p.stack.join(', ')}${p.repo ? `\n<span class="d">code:</span> <a href="${p.repo}" target="_blank" rel="noopener">${p.repo.replace('https://','')}</a>` : ''}${p.demo ? `\n<span class="d">demo:</span> open ${p.demo[0]}` : ''}`); },
+    experience: () => print(`<span class="s">2025</span>  Junior Software Developer, I-Axiom Cloud ERP (C#, .NET, Oracle)
+<span class="s">2024</span>  Pathfinder Intern, BSH Home Appliances Egypt
+<span class="s">2026</span>  B.Sc. CSE, German University in Cairo, thesis graded Excellent
+<span class="s">2013</span>  Professional handball, right wing, Egyptian premier league`),
+    skills: () => print(`<span class="s">languages</span>   Python  JavaScript  Java  C#  C++  SQL
+<span class="s">frameworks</span>  React  Node  Express  Flask  Spring Boot  .NET
+<span class="s">data</span>        PostgreSQL  Oracle  MongoDB  Redis  Cassandra  Neo4j  Elasticsearch
+<span class="s">ai + 3d</span>     PyTorch  FAISS  OpenGL  Blender  Docker  Git`),
+    contact: () => print(`email     <a href="mailto:${EMAIL}">${EMAIL}</a>\nlinkedin  <a href="https://linkedin.com/in/omar-tamer-farouk" target="_blank" rel="noopener">linkedin.com/in/omar-tamer-farouk</a>\ngithub    <a href="https://github.com/omartamerr10" target="_blank" rel="noopener">github.com/omartamerr10</a>`),
+    open: (a) => { const map = {contact:'mail', mail:'mail', about:'about', projects:'projects', maze:'maze', hotel:'hotel', ga:'ga', cv:'cv', resume:'cv', terminal:'term'}; if (!map[a]) return print(`open: try about, projects, maze, hotel, ga, contact or cv`); print(`<span class="d">opening ${a}…</span>`); open(map[a]); },
+    sudo: (a, all) => { if (/hire/.test(all)) print(`<span class="g">[sudo] permission granted.</span>\nGreat choice. Sending you to my inbox: <a href="mailto:${EMAIL}?subject=Let's%20talk">${EMAIL}</a>`); else print(`sudo: try <span class="b">sudo hire omar</span>`); },
+    clear: () => { out.innerHTML = ''; },
+    handball: () => print(`Right wing since 2013. Fast break, tight angle, finish low. Same idea as shipping code.`),
+    exit: () => close('term'),
+  };
+  const run = (line) => {
+    print(`<span class="g">omar@cairo</span> <span class="d">~ $</span> ${esc(line)}`);
+    const [cmd, ...args] = line.trim().split(/\s+/); if (!cmd) return;
+    const f = CMDS[cmd.toLowerCase()]; if (f) f(args[0]?.toLowerCase(), line.toLowerCase()); else print(`command not found: ${esc(cmd)}. Type <span class="b">help</span>`);
+  };
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { const v = input.value; hist.push(v); hi = hist.length; input.value = ''; run(v); }
+    else if (e.key === 'ArrowUp') { if (hi > 0) { hi--; input.value = hist[hi]; } e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { if (hi < hist.length) { hi++; input.value = hist[hi] || ''; } e.preventDefault(); }
+    else if (e.key === 'Tab') { e.preventDefault(); const opts = [...Object.keys(CMDS), ...PROJECTS.map(p => p.id)]; const parts = input.value.split(' '); const last = parts.pop(); const m = opts.filter(o => o.startsWith(last)); if (m.length === 1) { parts.push(m[0]); input.value = parts.join(' ') + ' '; } }
+  });
+  term.addEventListener('click', () => { if (!getSelection().toString()) input.focus(); });
+  print(`<span class="s">Welcome to OmarOS.</span> Type <span class="b">help</span> to see what I can show you.`);
+  CMDS.neofetch();
+  ctx.focus = () => input.focus();
+  setTimeout(() => { if (!isPhone()) input.focus(); }, 60);
+};
+
+/* ---------- hotel bot ---------- */
+const HOTELS = [
+  {n:'Nile Terrace Hotel', city:'cairo', price:95, tags:'nile view rooftop pool business wifi central', note:'Sample listing'},
+  {n:'Zamalek Garden Suites', city:'cairo', price:70, tags:'quiet family garden breakfast wifi', note:'Sample listing'},
+  {n:'Downtown Budget Inn', city:'cairo', price:28, tags:'cheap budget central metro wifi solo', note:'Sample listing'},
+  {n:'Pyramids View Lodge', city:'giza', price:60, tags:'pyramids view family breakfast terrace', note:'Sample listing'},
+  {n:'Corniche Sea Hotel', city:'alexandria', price:55, tags:'sea view beach seafood family couple', note:'Sample listing'},
+  {n:'Luxor West Bank House', city:'luxor', price:45, tags:'quiet nile view garden couple history', note:'Sample listing'},
+  {n:'Red Sea Reef Resort', city:'sharm', price:120, tags:'beach diving pool luxury couple all inclusive', note:'Sample listing'},
+  {n:'Dahab Blue Camp', city:'dahab', price:22, tags:'cheap beach diving solo backpacker', note:'Sample listing'},
+];
+RENDER.hotel = (b) => {
+  b.innerHTML = `<div class="chat"><div class="banner">Demo that runs in your browser on sample hotels. The real project uses a Groq LLM, FAISS and Neo4j.</div>
+    <div class="msgs" aria-live="polite"></div>
+    <div><div class="suggest"><button>Cheap hotel in Cairo with wifi</button><button>Family hotel near the pyramids</button><button>Beach and diving under $50</button><button>Quiet place with a Nile view</button></div>
+    <form class="compose"><input placeholder="Ask for a hotel…" aria-label="Message"><button class="btn btn-p" type="submit">Send</button></form></div></div>`;
+  const msgs = b.querySelector('.msgs'), form = b.querySelector('form'), input = form.querySelector('input');
+  const add = (cls, html) => { const m = el(`<div class="m ${cls}">${html}</div>`); msgs.appendChild(m); msgs.scrollTop = msgs.scrollHeight; return m; };
+  const CITY = {cairo:'cairo', giza:'giza', pyramids:'giza', pyramid:'giza', alex:'alexandria', alexandria:'alexandria', luxor:'luxor', sharm:'sharm', 'red sea':'sharm', dahab:'dahab'};
+  const SYN = {cheap:'cheap budget', budget:'cheap budget', kids:'family', family:'family', sea:'sea beach', beach:'beach sea', diving:'diving', quiet:'quiet', nile:'nile view', view:'view', pool:'pool', luxury:'luxury', wifi:'wifi', romantic:'couple', couple:'couple', business:'business', history:'history', pyramids:'pyramids view'};
+  const toks = s => s.toLowerCase().replace(/[^a-z0-9$ ]/g,' ').split(/\s+/).filter(Boolean);
+  const vec = words => { const v = {}; words.forEach(w => v[w] = (v[w]||0)+1); return v; };
+  const cos = (a, b) => { let d=0,na=0,nb=0; for (const k in a){ na+=a[k]*a[k]; if (b[k]) d+=a[k]*b[k]; } for (const k in b) nb+=b[k]*b[k]; return na&&nb ? d/Math.sqrt(na*nb) : 0; };
+  const answer = (q) => {
+    const t = toks(q), low = q.toLowerCase();
+    const greet = /^(hi|hey|hello|salam|ahlan)\b/.test(low);
+    const intent = greet ? 'greeting' : /(book|reserve)/.test(low) ? 'book_hotel' : 'search_hotels';
+    if (intent === 'greeting') return add('b', `Hi! Tell me where you're going and what matters: budget, view, pool, family, beach.<div class="trace">intent: <i>greeting</i> (0.97)</div>`);
+    let city = null; for (const k in CITY) if (low.includes(k)) { city = CITY[k]; break; }
+    const money = low.match(/\$?\s?(\d{2,4})/); const max = money ? +money[1] : (/(cheap|budget)/.test(low) ? 40 : null);
+    const expanded = t.flatMap(w => (SYN[w]||w).split(' '));
+    const qv = vec(expanded);
+    let rows = HOTELS.map(h => ({ h, s: cos(qv, vec(toks(h.tags + ' ' + h.city))) }));
+    const before = rows.length;
+    if (city) rows = rows.filter(r => r.h.city === city);
+    if (max) rows = rows.filter(r => r.h.price <= max);
+    rows.sort((a,b) => b.s - a.s); rows = rows.slice(0,3);
+    const conf = (0.86 + Math.min(0.12, expanded.length*0.01)).toFixed(2);
+    const trace = `intent: <i>${intent}</i> (${conf})\nentities: city=${city||'any'}${max?`, max_price=$${max}`:''}\nsemantic search: ${before} hotels scored by cosine similarity\ngraph filter: ${rows.length} match${rows.length===1?'':'es'}`;
+    if (!rows.length) return add('b', `I couldn't find a match in the sample set. Try another city or a higher budget.<div class="trace">${trace}</div>`);
+    add('b', `Here ${rows.length===1?'is the best match':'are the best matches'}:<div class="hotels">${rows.map(r => `<div class="hotel"><b>${r.h.n}</b><small>${r.h.city[0].toUpperCase()+r.h.city.slice(1)} · $${r.h.price}/night · ${r.h.tags.split(' ').slice(0,4).join(', ')} · ${r.h.note}</small></div>`).join('')}</div><div class="trace">${trace}</div>`);
+  };
+  const send = (q) => { if (!q.trim()) return; add('u', q.replace(/[<>]/g,'')); const typing = add('b', '<span style="color:var(--faint)">Thinking…</span>'); setTimeout(() => { typing.remove(); answer(q); }, 450); };
+  form.addEventListener('submit', e => { e.preventDefault(); send(input.value); input.value = ''; });
+  b.querySelectorAll('.suggest button').forEach(x => x.addEventListener('click', () => send(x.textContent)));
+  add('b', `Hi, I'm a pocket version of my hotel assistant. Ask me for a place to stay in Egypt.`);
+};
+
+/* ---------- GA lab ---------- */
+RENDER.ga = (b, ctx) => {
+  b.classList.add('pad');
+  b.innerHTML = `<div class="ga">
+    <p style="color:var(--muted)">My thesis used a genetic algorithm to tune a cartoonizer. This is the same idea on text: 200 random strings breed, mutate and compete until one matches your target.</p>
+    <div><label for="gaT">Target</label><div class="row" style="margin-top:6px"><input id="gaT" value="HIRE OMAR TAMER" maxlength="28"><button class="btn btn-p" id="gaGo">Evolve</button></div></div>
+    <div class="best" id="gaBest" aria-live="off">&nbsp;</div>
+    <div class="gstats"><div><b id="gaGen">0</b><small>generation</small></div><div><b id="gaFit">0%</b><small>best fitness</small></div><div><b id="gaPop">200</b><small>population</small></div><div><b id="gaMut">2%</b><small>mutation rate</small></div></div>
+    <svg class="chart" viewBox="0 0 100 40" preserveAspectRatio="none" aria-label="Best fitness per generation"><rect width="100" height="40" fill="#f1f4f8"/><polyline id="gaLine" fill="none" stroke="#d9822b" stroke-width="2" vector-effect="non-scaling-stroke" points=""/></svg>
+    <div><label>Top of the population</label><div class="pop" id="gaList" style="margin-top:6px"></div></div></div>`;
+  const CH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 !?.,\'-';
+  let timer = 0;
+  const run = () => {
+    clearTimeout(timer);
+    const target = (b.querySelector('#gaT').value.toUpperCase().replace(new RegExp(`[^${CH.replace(/[-\\]/g,'\\$&')}]`,'g'),'') || 'HIRE OMAR').slice(0,28);
+    const L = target.length, N = 200, MUT = 0.02, rc = () => CH[(Math.random()*CH.length)|0];
+    let pop = Array.from({length:N}, () => Array.from({length:L}, rc).join(''));
+    const fit = s => { let f=0; for (let i=0;i<L;i++) if (s[i]===target[i]) f++; return f/L; };
+    let gen = 0; const hist = [];
+    const step = () => {
+      const scored = pop.map(s => [s, fit(s)]).sort((a,b) => b[1]-a[1]);
+      const best = scored[0]; hist.push(best[1]); gen++;
+      b.querySelector('#gaBest').innerHTML = [...best[0]].map((c,i) => c===target[i] ? `<span class="ok">${c===' '?'&nbsp;':c}</span>` : (c===' '?'&nbsp;':c)).join('');
+      b.querySelector('#gaGen').textContent = gen; b.querySelector('#gaFit').textContent = Math.round(best[1]*100) + '%';
+      b.querySelector('#gaLine').setAttribute('points', hist.map((v,i) => `${hist.length<2?0:i/(hist.length-1)*100},${38-v*36}`).join(' '));
+      b.querySelector('#gaList').textContent = scored.slice(0,6).map(([s,f]) => `${s}  ${(f*100).toFixed(0).padStart(3)}%`).join('\n');
+      if (best[1] === 1 || gen > 2000) return;
+      // tournament selection, one-point crossover, mutation, elitism of 2
+      const pick = () => { let a = scored[(Math.random()*N)|0], c = scored[(Math.random()*N)|0]; return a[1] > c[1] ? a[0] : c[0]; };
+      const next = [scored[0][0], scored[1][0]];
+      while (next.length < N) { const p1 = pick(), p2 = pick(), cut = (Math.random()*L)|0; let child = p1.slice(0,cut) + p2.slice(cut); child = [...child].map(c => Math.random() < MUT ? rc() : c).join(''); next.push(child); }
+      pop = next; timer = setTimeout(step, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 40);
+    };
+    step();
+  };
+  b.querySelector('#gaGo').addEventListener('click', run);
+  b.querySelector('#gaT').addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+  ctx.cleanup.push(() => clearTimeout(timer));
+  run();
+};
+
+/* ---------- maze: a raycaster built with Maze Runner's own textures ---------- */
+RENDER.maze = (b, ctx) => {
+  b.innerHTML = `<div class="maze"><div class="stage"><canvas width="640" height="360" aria-label="First-person maze. Use arrow keys or WASD to move."></canvas>
+    <div class="msg" id="mzMsg"><div><h3>Find the green door</h3><p>A small tribute to my C++ Maze Runner, rendered with its own brick and stone textures. Arrow keys, WASD or the buttons to move.</p><button class="btn btn-p" id="mzStart">Start</button></div></div></div>
+    <div class="hud"><span>Time <b id="mzT">0.0s</b></span><span>Steps <b id="mzS">0</b></span><span style="color:#7d8a9c">↑↓ move · ←→ turn</span>
+    <div class="pad-ctl"><button data-k="l" aria-label="Turn left">◀</button><button data-k="u" aria-label="Forward">▲</button><button data-k="d" aria-label="Back">▼</button><button data-k="r" aria-label="Turn right">▶</button></div></div></div>`;
+  const cv = b.querySelector('canvas'), g = cv.getContext('2d');
+  const MAP = [
+    '################',
+    '#......#.......#',
+    '#.####.#.#####.#',
+    '#.#....#.....#.#',
+    '#.#.########.#.#',
+    '#.#.#......#.#.#',
+    '#...#.####.#...#',
+    '###.#.#..#.###.#',
+    '#...#.#..#...#.#',
+    '#.###.#.##.#.#.#',
+    '#.....#....#.#.#',
+    '#.#########..#.#',
+    '#.#.......####.#',
+    '#.#.#####......#',
+    '#...#....#####E#',
+    '################'];
+  const W = cv.width, H = cv.height;
+  const load = src => new Promise(r => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.drawImage(i,0,0,128,128); r(x.getImageData(0,0,128,128).data); }; i.onerror = () => r(null); i.src = src; });
+  let tex = {}, P = { x:1.5, y:1.5, a:0 }, keys = {}, raf = 0, t0 = 0, steps = 0, running = false, won = false;
+  Promise.all([load('../assets/img/tex-brick.png'), load('../assets/img/tex-stone.png'), load('../assets/img/tex-concrete.png')]).then(([b1,b2,b3]) => { tex = { wall:b1, floor:b2, ceil:b3 }; frame(); });
+  const img = g.createImageData(W, H), buf = img.data, zbuf = new Float32Array(W);
+  const at = (x,y) => MAP[y|0]?.[x|0] ?? '#';
+  function render(){
+    const dirX = Math.cos(P.a), dirY = Math.sin(P.a), plX = -dirY*0.66, plY = dirX*0.66;
+    // floor and ceiling
+    for (let y = H/2|0; y < H; y++){
+      const rowD = (0.5*H)/(y - H/2 + 0.0001);
+      const fx0 = P.x + rowD*(dirX - plX), fy0 = P.y + rowD*(dirY - plY), fx1 = P.x + rowD*(dirX + plX), fy1 = P.y + rowD*(dirY + plY);
+      const sx = (fx1-fx0)/W, sy = (fy1-fy0)/W; let fx = fx0, fy = fy0; const shade = Math.max(0.12, 1 - rowD/9);
+      for (let x = 0; x < W; x++, fx += sx, fy += sy){
+        const tx = ((fx - Math.floor(fx))*128)|0, ty = ((fy - Math.floor(fy))*128)|0, ti = (ty*128+tx)*4;
+        const f = (y*W + x)*4, c = ((H-1-y)*W + x)*4;
+        if (tex.floor){ buf[f]=tex.floor[ti]*shade*.8; buf[f+1]=tex.floor[ti+1]*shade*.8; buf[f+2]=tex.floor[ti+2]*shade*.8; } else { buf[f]=buf[f+1]=buf[f+2]=40*shade; }
+        if (tex.ceil){ buf[c]=tex.ceil[ti]*shade*.55; buf[c+1]=tex.ceil[ti+1]*shade*.6; buf[c+2]=tex.ceil[ti+2]*shade*.7; } else { buf[c]=20; buf[c+1]=26; buf[c+2]=36; }
+        buf[f+3] = buf[c+3] = 255;
+      }
+    }
+    // walls (DDA)
+    for (let x = 0; x < W; x++){
+      const cam = 2*x/W - 1, rx = dirX + plX*cam, ry = dirY + plY*cam;
+      let mx = P.x|0, my = P.y|0; const dx = Math.abs(1/rx), dy = Math.abs(1/ry);
+      let stX, stY, sdx, sdy, side = 0, hit = '#';
+      if (rx < 0){ stX=-1; sdx=(P.x-mx)*dx; } else { stX=1; sdx=(mx+1-P.x)*dx; }
+      if (ry < 0){ stY=-1; sdy=(P.y-my)*dy; } else { stY=1; sdy=(my+1-P.y)*dy; }
+      for (let i=0;i<64;i++){ if (sdx < sdy){ sdx+=dx; mx+=stX; side=0; } else { sdy+=dy; my+=stY; side=1; } hit = at(mx,my); if (hit !== '.') break; }
+      const dist = side===0 ? sdx-dx : sdy-dy; zbuf[x] = dist;
+      const lh = (H/dist)|0, top = Math.max(0, (H-lh)/2|0), bot = Math.min(H, (H+lh)/2|0);
+      let wx = side===0 ? P.y + dist*ry : P.x + dist*rx; wx -= Math.floor(wx);
+      const tx = (wx*128)|0, shade = Math.max(0.18, Math.min(1, 1.6/dist)) * (side ? 0.78 : 1);
+      for (let y = top; y < bot; y++){
+        const ty = (((y - (H-lh)/2)/lh)*128)|0, ti = ((ty&127)*128 + tx)*4, o = (y*W+x)*4;
+        if (hit === 'E'){ const s = (tx<8||tx>119||ty<8||ty>119) ? .35 : 1; buf[o]=40*s*shade; buf[o+1]=210*s*shade; buf[o+2]=120*s*shade; }
+        else if (tex.wall){ buf[o]=tex.wall[ti]*shade; buf[o+1]=tex.wall[ti+1]*shade; buf[o+2]=tex.wall[ti+2]*shade; }
+        else { buf[o]=150*shade; buf[o+1]=70*shade; buf[o+2]=50*shade; }
+        buf[o+3]=255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    // minimap
+    const s = 6, ox = W - 16*s - 10, oy = 10;
+    g.globalAlpha = .8; g.fillStyle = '#0b0f16'; g.fillRect(ox-3, oy-3, 16*s+6, 16*s+6);
+    for (let y=0;y<16;y++) for (let x=0;x<16;x++){ const c = MAP[y][x]; if (c==='#'){ g.fillStyle='#8a4a36'; g.fillRect(ox+x*s,oy+y*s,s,s); } else if (c==='E'){ g.fillStyle='#38d27a'; g.fillRect(ox+x*s,oy+y*s,s,s); } }
+    g.fillStyle = '#8db7ff'; g.beginPath(); g.arc(ox+P.x*s, oy+P.y*s, 2.4, 0, 7); g.fill(); g.globalAlpha = 1;
+  }
+  function frame(){
+    if (running && !won){
+      const sp = 0.055, rs = 0.045; let nx = P.x, ny = P.y;
+      if (keys.l) P.a -= rs; if (keys.r) P.a += rs;
+      const f = (keys.u?1:0) - (keys.d?1:0);
+      if (f){ nx += Math.cos(P.a)*sp*f; ny += Math.sin(P.a)*sp*f; const pad = 0.2;
+        if (at(nx + Math.sign(nx-P.x)*pad, P.y) !== '#') { if (at(nx + Math.sign(nx-P.x)*pad, P.y) === 'E') win(); else P.x = nx; }
+        if (at(P.x, ny + Math.sign(ny-P.y)*pad) !== '#') { if (at(P.x, ny + Math.sign(ny-P.y)*pad) === 'E') win(); else P.y = ny; }
+        steps++; b.querySelector('#mzS').textContent = Math.round(steps/10); }
+      b.querySelector('#mzT').textContent = ((performance.now()-t0)/1000).toFixed(1) + 's';
+    }
+    render(); if (running && !won) raf = requestAnimationFrame(frame);
+  }
+  function win(){ won = true; running = false; const t = ((performance.now()-t0)/1000).toFixed(1); const m = b.querySelector('#mzMsg'); m.style.display=''; m.innerHTML = `<div><h3>You escaped in ${t}s</h3><p>The full game is an infinite runner in C++ and OpenGL with lighting and 3D models.</p><div class="actions" style="justify-content:center"><button class="btn btn-p" id="mzAgain">Play again</button><a class="btn btn-g" style="background:#1d2736;border-color:#2a3647;color:#fff" href="https://github.com/omartamerr10/3d-maze-runner-opengl" target="_blank" rel="noopener">See the code ↗</a></div></div>`; m.querySelector('#mzAgain').addEventListener('click', start); }
+  function start(){ P = { x:1.5, y:1.5, a:0 }; steps = 0; won = false; running = true; t0 = performance.now(); b.querySelector('#mzMsg').style.display = 'none'; cancelAnimationFrame(raf); frame(); cv.focus(); }
+  b.querySelector('#mzStart').addEventListener('click', start);
+  const KM = { ArrowUp:'u', w:'u', W:'u', ArrowDown:'d', s:'d', S:'d', ArrowLeft:'l', a:'l', A:'l', ArrowRight:'r', d:'r', D:'r' };
+  const kd = e => { if (!openWins.maze || !openWins.maze.el.style.zIndex || +openWins.maze.el.style.zIndex !== z) return; const k = KM[e.key]; if (k){ keys[k] = true; e.preventDefault(); } };
+  const ku = e => { const k = KM[e.key]; if (k) keys[k] = false; };
+  addEventListener('keydown', kd); addEventListener('keyup', ku);
+  b.querySelectorAll('.pad-ctl button').forEach(btn => { const k = btn.dataset.k; btn.addEventListener('pointerdown', e => { keys[k] = true; e.preventDefault(); }); ['pointerup','pointerleave','pointercancel'].forEach(ev => btn.addEventListener(ev, () => keys[k] = false)); });
+  cv.tabIndex = 0;
+  ctx.cleanup.push(() => { cancelAnimationFrame(raf); removeEventListener('keydown', kd); removeEventListener('keyup', ku); });
+};
+
+/* ======================= desktop + dock ======================= */
+const icons = $('#icons'), dock = $('#dock');
+DESKTOP.forEach(([k, label]) => { const d = el(`<button class="dicon" data-app="${k}">${iconHTML(k)}<span>${label}</span></button>`); d.addEventListener(isPhone() ? 'click' : 'dblclick', () => open(k)); d.addEventListener('keydown', e => { if (e.key === 'Enter') open(k); }); if (!isPhone()) d.addEventListener('click', () => d.focus()); icons.appendChild(d); });
+DOCK.forEach(([k, label], i) => { if (i === 3) dock.appendChild(el('<span class="sep extra" aria-hidden="true"></span>')); const d = el(`<button data-app="${k}" class="${i>=3&&i<6?'extra':''}" aria-label="${label}">${iconHTML(k)}<span class="tip">${label}</span></button>`); d.addEventListener('click', () => open(k)); dock.appendChild(d); });
+document.querySelectorAll('.menus [data-open]').forEach(b => b.addEventListener('click', () => open(b.dataset.open)));
+addEventListener('keydown', e => { if (e.key === 'Escape') { const top = Object.entries(openWins).sort((a,b) => +b[1].el.style.zIndex - +a[1].el.style.zIndex)[0]; if (top && top[0] !== 'term') close(top[0]); } });
+
+/* clock */
+const fmt = new Intl.DateTimeFormat('en-GB', { timeZone:'Africa/Cairo', weekday:'short', hour:'2-digit', minute:'2-digit' });
+const tick = () => { $('#clock').textContent = 'Cairo ' + fmt.format(new Date()); }; tick(); setInterval(tick, 15000);
+
+/* ======================= wallpaper ======================= */
+(() => {
+  const c = $('#wall'), x = c.getContext('2d'); let w, h, dpr = Math.min(2, devicePixelRatio || 1);
+  const size = () => { w = c.width = innerWidth*dpr; h = c.height = innerHeight*dpr; };
+  size(); addEventListener('resize', size);
+  const blobs = [ {c:'31,91,181', r:.55, x:.2, y:.25, sx:.00007, sy:.00011}, {c:'201,169,120', r:.42, x:.85, y:.8, sx:.00009, sy:.00006}, {c:'47,199,167', r:.38, x:.7, y:.15, sx:.00006, sy:.0001}, {c:'18,48,79', r:.6, x:.4, y:.9, sx:.00005, sy:.00008} ];
+  let mx = .5, my = .5; addEventListener('pointermove', e => { mx = e.clientX/innerWidth; my = e.clientY/innerHeight; }, { passive:true });
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const draw = (t) => {
+    x.fillStyle = '#0a1424'; x.fillRect(0,0,w,h);
+    blobs.forEach((b,i) => { const px = (b.x + Math.sin(t*b.sx + i)*.08 + (mx-.5)*.04*(i%2?1:-1))*w, py = (b.y + Math.cos(t*b.sy + i)*.08 + (my-.5)*.04)*h, r = b.r*Math.max(w,h);
+      const gr = x.createRadialGradient(px,py,0,px,py,r); gr.addColorStop(0,`rgba(${b.c},.42)`); gr.addColorStop(1,`rgba(${b.c},0)`); x.fillStyle = gr; x.fillRect(0,0,w,h); });
+    // a faint grid like graph paper, for an engineer's desk
+    x.strokeStyle = 'rgba(233,226,214,.035)'; x.lineWidth = 1; const s = 48*dpr; x.beginPath(); for (let gx=0; gx<w; gx+=s){ x.moveTo(gx,0); x.lineTo(gx,h); } for (let gy=0; gy<h; gy+=s){ x.moveTo(0,gy); x.lineTo(w,gy); } x.stroke();
+    if (!still) requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
+})();
+
+/* ======================= boot ======================= */
+(() => {
+  const boot = $('#boot'), log = $('#bootlog'), bar = $('#bootbar');
+  const lines = ['Loading omar.profile ............ ok','Mounting /projects (7) ........... ok','Starting maze renderer ........... ok','Warming up hotel assistant ....... ok','Seeding genetic algorithm ........ ok','Welcome.'];
+  let i = 0, done = false;
+  const finish = () => { if (done) return; done = true; boot.classList.add('gone'); setTimeout(() => boot.remove(), 600); open('about'); if (!isPhone()) setTimeout(() => { open('projects'); focusWin(openWins.about.el); }, 250); };
+  boot.addEventListener('click', finish); addEventListener('keydown', finish, { once:true });
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return finish();
+  const step = () => { if (done) return; log.textContent += lines[i] + '\n'; bar.style.width = ((i+1)/lines.length*100) + '%'; i++; if (i < lines.length) setTimeout(step, 190); else setTimeout(finish, 350); };
+  setTimeout(step, 200);
+})();
+</script>
+<!-- view switcher: shared by every version -->
+<div class="ovs" data-pos="bl" data-current="os">
+  <button class="ovs-pill" type="button" aria-expanded="false" aria-controls="ovsPanel"><span class="ovs-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span><span>Switch view</span></button>
+  <div class="ovs-panel" id="ovsPanel" role="menu" hidden>
+    <p class="ovs-h">Six ways to meet Omar</p>
+    <a role="menuitem" href="../pro/index.html" data-v="pro"><b style="--c:#1f5bb5">Professional</b><span>Clean and quick to read</span></a>
+    <a role="menuitem" href="../cinematic/index.html" data-v="cinematic"><b style="--c:#e8c98f">Cinematic 3D</b><span>12,000 particles, playable apps</span></a>
+    <a role="menuitem" href="../os/index.html" data-v="os"><b style="--c:#2fc7a7">OmarOS</b><span>A working desktop and terminal</span></a>
+    <a role="menuitem" href="../board/index.html" data-v="board"><b style="--c:#f2a65a">The Board</b><span>An infinite canvas to explore</span></a>
+    <a role="menuitem" href="../arcade/index.html" data-v="arcade"><b style="--c:#d94f4f">Omar's Quest</b><span>Play through my story</span></a>
+    <a role="menuitem" href="../og/index.html" data-v="og"><b style="--c:#8a7f6e">The OG</b><span>The original portfolio</span></a>
+    <a class="ovs-all" role="menuitem" href="../index.html">See all six side by side</a>
+  </div>
+</div>
+<style>
+.ovs{position:fixed;z-index:99990;font:500 14px/1.3 "Inter",system-ui,sans-serif;color:#0f1a2a}
+.ovs[data-pos="bl"]{left:max(16px,env(safe-area-inset-left,0px));bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.ovs[data-pos="br"]{right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.ovs[data-pos="tr"]{right:max(16px,env(safe-area-inset-right,0px));top:max(16px,env(safe-area-inset-top,0px))}
+.ovs[data-pos="tl"]{left:max(16px,env(safe-area-inset-left,0px));top:max(16px,env(safe-area-inset-top,0px))}
+.ovs-pill{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 16px 0 12px;border:0;border-radius:999px;background:rgba(255,255,255,.94);color:#0f1a2a;font:600 13.5px/1 "Inter",system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px -10px rgba(0,0,0,.45),0 0 0 1px rgba(15,26,42,.08);transition:transform .25s cubic-bezier(.16,1,.3,1)}
+.ovs-pill:hover{transform:translateY(-2px)}
+.ovs-dots{display:grid;grid-template-columns:repeat(6,6px);gap:3px}
+.ovs-dots i{width:6px;height:6px;border-radius:50%;background:#c3cad5}
+.ovs-dots i:nth-child(1){background:#1f5bb5}.ovs-dots i:nth-child(2){background:#e8c98f}.ovs-dots i:nth-child(3){background:#2fc7a7}.ovs-dots i:nth-child(4){background:#f2a65a}.ovs-dots i:nth-child(5){background:#d94f4f}.ovs-dots i:nth-child(6){background:#8a7f6e}
+.ovs-panel{position:absolute;width:290px;padding:10px;border-radius:18px;background:#fff;box-shadow:0 24px 60px -16px rgba(0,0,0,.5),0 0 0 1px rgba(15,26,42,.08);display:grid;gap:2px;transform-origin:bottom left;animation:ovsIn .3s cubic-bezier(.16,1,.3,1)}
+.ovs[data-pos^="b"] .ovs-panel{bottom:50px}
+.ovs[data-pos^="t"] .ovs-panel{top:50px;transform-origin:top right}
+.ovs[data-pos$="l"] .ovs-panel{left:0}
+.ovs[data-pos$="r"] .ovs-panel{right:0}
+.ovs-panel[hidden]{display:none}
+@keyframes ovsIn{from{opacity:0;transform:scale(.92) translateY(8px)}}
+.ovs-h{margin:4px 10px 8px;font:600 11px/1 "Inter",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#718096}
+.ovs-panel a{display:grid;gap:2px;padding:9px 10px;border-radius:12px;text-decoration:none;color:#0f1a2a;transition:background-color .15s}
+.ovs-panel a:hover,.ovs-panel a:focus-visible{background:#f1f4f8;outline:none}
+.ovs-panel a b{display:flex;align-items:center;gap:8px;font-weight:600}
+.ovs-panel a b::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c)}
+.ovs-panel a span{color:#5b6779;font-size:12.5px;padding-left:17px}
+.ovs-panel a[aria-current="page"]{background:#f1f4f8}
+.ovs-panel a[aria-current="page"] b::after{content:"You're here";margin-left:auto;font:500 11px/1 "Inter",system-ui,sans-serif;color:#718096}
+.ovs-panel .ovs-all{margin-top:4px;padding:11px 10px;border-radius:12px;background:#0f1a2a;color:#fff;font-weight:600;text-align:center}
+.ovs-panel .ovs-all:hover{background:#24324a}
+.ovs-veil{position:fixed;inset:0;z-index:99999;pointer-events:none;background:#0f1a2a;clip-path:circle(0% at var(--x,50%) var(--y,50%));transition:clip-path .6s cubic-bezier(.7,0,.2,1)}
+.ovs-veil.on{clip-path:circle(150% at var(--x,50%) var(--y,50%))}
+@media (prefers-reduced-motion:reduce){.ovs-panel{animation:none}.ovs-veil{transition:none}}
+@media (max-width:760px){.ovs{bottom:calc(104px + env(safe-area-inset-bottom,0px))!important}body.has-win .ovs{display:none}}
+</style>
+<script>
+(() => {
+  const root = document.querySelector('.ovs'), pill = root.querySelector('.ovs-pill'), panel = root.querySelector('.ovs-panel');
+  const cur = root.dataset.current;
+  try { localStorage.setItem('omar-view', cur); } catch {}
+  panel.querySelector(`[data-v="${cur}"]`)?.setAttribute('aria-current', 'page');
+  const toggle = (open) => { panel.hidden = !open; pill.setAttribute('aria-expanded', String(open)); if (open) panel.querySelector('a')?.focus(); };
+  pill.addEventListener('click', e => { e.stopPropagation(); toggle(panel.hidden); });
+  document.addEventListener('click', e => { if (!root.contains(e.target)) toggle(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden) { toggle(false); pill.focus(); } });
+  // circular wipe out of the page, in the colour of where you're going
+  const veil = document.createElement('div'); veil.className = 'ovs-veil'; document.body.appendChild(veil);
+  panel.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
+    if (a.getAttribute('aria-current') === 'page') { e.preventDefault(); toggle(false); return; }
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    e.preventDefault(); const r = pill.getBoundingClientRect();
+    veil.style.setProperty('--x', (r.left + r.width/2) + 'px'); veil.style.setProperty('--y', (r.top + r.height/2) + 'px');
+    veil.style.background = getComputedStyle(a.querySelector('b') || a).getPropertyValue('--c') || '#0f1a2a';
+    veil.classList.add('on'); setTimeout(() => { location.href = a.href; }, 560);
+  }));
+  addEventListener('pageshow', () => veil.classList.remove('on'));
+})();
+</script>
+
+</body>
+</html>

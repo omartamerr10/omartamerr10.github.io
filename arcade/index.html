@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Omar's Quest</title>
+<meta name="description" content="Play through Omar Tamer's story: hit the blocks to find his projects, collect his skills, reach the flag to get in touch.">
+<style>
+@font-face{font-family:"Press Start 2P";font-weight:400;font-display:swap;src:url(../assets/fonts/press-start-2p-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../assets/fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:400;font-display:swap;src:url(../assets/fonts/inter-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:600;font-display:swap;src:url(../assets/fonts/inter-latin-600-normal.woff2) format("woff2")}
+
+/* Layout: a full-screen side-scroller at dusk over Cairo. Pixel type for the game, plain readable type in the cards that pop out of the blocks. One deliberate dark look. */
+:root{ --night:#101a33; --sand:#e9c48a; --gold:#ffcc4d; --red:#d94f4f; --ink:#0d1220; --paper:#fff8ec; --muted:#5d5648; --pixel:"Press Start 2P",ui-monospace,monospace; --text:"Inter",system-ui,sans-serif; color-scheme:dark }
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;overflow:hidden;background:var(--night);color:#fff;font:400 16px/1.55 var(--text);-webkit-font-smoothing:antialiased;touch-action:none;user-select:none}
+h1,h2,p,ul{margin:0}
+ul{padding:0;list-style:none}
+a{color:inherit}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;display:block}
+.hud{position:fixed;left:max(14px,env(safe-area-inset-left,0px));top:max(14px,env(safe-area-inset-top,0px));z-index:5;display:flex;flex-wrap:wrap;gap:8px;font:400 11px/1 var(--pixel);pointer-events:none}
+.hud{max-width:calc(100% - 190px)}
+.hud span{padding:9px 11px;background:rgba(13,18,32,.78);box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+.hud b{color:var(--gold);font-weight:400}
+.screen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:rgba(8,12,24,.72);text-align:center;transition:opacity .4s}
+.screen.hide{opacity:0;pointer-events:none}
+.screen h1{font:400 clamp(26px,5vw,58px)/1.2 var(--pixel);color:var(--gold);text-shadow:4px 4px 0 #a2482b,8px 8px 0 rgba(0,0,0,.4);letter-spacing:.02em}
+.screen .sub{margin-top:18px;font:600 clamp(15px,1.2vw + 10px,19px)/1.5 var(--text);color:#e7dcc6;max-width:40ch;margin-inline:auto}
+.screen .keys{margin-top:22px;font:400 10px/2 var(--pixel);color:#c8bda6}
+.screen .start{margin-top:26px;padding:16px 26px;background:var(--gold);color:#3a1f05;font:400 14px/1 var(--pixel);box-shadow:0 6px 0 #a2482b;animation:blink 1.4s steps(2) infinite}
+.screen .start:active{transform:translateY(4px);box-shadow:0 2px 0 #a2482b}
+@keyframes blink{50%{filter:brightness(1.25)}}
+.screen .alt{display:block;margin-top:20px;font:600 14px/1.4 var(--text);color:#c8bda6;text-decoration:underline;text-underline-offset:3px}
+.modal{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;background:rgba(8,12,24,.6);opacity:0;pointer-events:none;transition:opacity .25s}
+.modal.on{opacity:1;pointer-events:auto}
+.mcard{width:min(520px,100%);max-height:calc(100% - 20px);overflow:auto;background:var(--paper);color:var(--ink);padding:26px 26px 22px;box-shadow:0 0 0 4px var(--ink),0 0 0 8px var(--gold),12px 12px 0 8px rgba(0,0,0,.35);transform:scale(.6);transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.modal.on .mcard{transform:none}
+.mcard .tag{font:400 10px/1.6 var(--pixel);color:#a2482b}
+.mcard h2{font:700 28px/1.1 "Bricolage Grotesque",var(--text);letter-spacing:-.02em;margin-top:10px}
+.mcard p{color:var(--muted);margin-top:10px}
+.mcard p b{color:var(--ink)}
+.mcard ul{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.mcard li{padding:5px 9px;background:#f1e4cb;font:600 12.5px/1.2 var(--text);color:#5a3a12}
+.mrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.mbtn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;font:400 11px/1 var(--pixel);text-decoration:none;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+.mbtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+.mbtn.go{background:var(--ink);color:var(--gold)}
+.mbtn.lk{background:#f1e4cb;color:var(--ink)}
+.pad{position:fixed;inset:auto 0 0 0;z-index:6;display:none;justify-content:space-between;padding:0 max(16px,env(safe-area-inset-left,0px)) max(18px,env(safe-area-inset-bottom,0px))}
+.pad div{display:flex;gap:12px}
+.pad button{width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 2px rgba(255,255,255,.3);font:400 18px/1 var(--pixel);touch-action:none}
+.pad button.on{background:rgba(255,204,77,.45)}
+.pad .jump{width:84px;height:84px;background:rgba(255,204,77,.3)}
+@media (hover:none),(max-width:820px){.pad{display:flex}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<div class="hud" aria-live="off"><span>SKILLS <b id="hSk">0</b>/<b id="hSkT">0</b></span><span>PROJECTS <b id="hPr">0</b>/<b id="hPrT">0</b></span><span>BUGS FIXED <b id="hBug">0</b></span></div>
+
+<div class="screen" id="title">
+  <div>
+    <h1>OMAR'S<br>QUEST</h1>
+    <p class="sub">Run through my story from Cairo to the finish flag. Hit the glowing blocks to find my projects, grab coins to learn my skills, and stomp a few bugs on the way.</p>
+    <p class="keys">← → MOVE · ↑ / SPACE JUMP · ESC PAUSE</p>
+    <button class="start" id="startBtn" type="button">PRESS START</button>
+    <a class="alt" href="../pro/index.html">Rather read than play? Open the Professional view</a>
+  </div>
+</div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="mcard" id="mcard"></div></div>
+<div class="pad" id="pad"><div><button data-k="left" aria-label="Left">◀</button><button data-k="right" aria-label="Right">▶</button></div><button class="jump" data-k="jump" aria-label="Jump">▲</button></div>
+
+<section class="sr"><h2>Omar Tamer's story, as a game</h2><p>Every card in the game is also in the Professional view. <a href="../pro/index.html">Open the Professional view</a>.</p></section>
+
+<script>
+(() => {
+  const cv = document.getElementById('c'), g = cv.getContext('2d');
+  const T = 32, ROWS = 15, VIEW_H = ROWS*T, GROUND = 12; // ground top row
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- content ---------------- */
+  const CARDS = {
+    guc: { tag:'LEVEL 1 · EDUCATION', title:'German University in Cairo', body:'<b>B.Sc. Computer Science and Engineering</b>, 2021 to 2026. Overall grade Very Good, bachelor\'s thesis graded Excellent.', chips:['Algorithms','Databases','Graphics','Machine learning'] },
+    thesis: { tag:'PROJECT · THESIS 2025', title:'Cartoonizing images with genetic algorithms', body:'AnimeGANv2 sets the style, <b>468 MediaPipe landmarks</b> drive the exaggeration, and a genetic algorithm tunes the settings. <b>+20% SSIM</b> over the baseline.', chips:['Python','PyTorch','Flask','React','PyGAD'], link:'https://github.com/omartamerr10/Cartoonizing-Images' },
+    hotel: { tag:'PROJECT · AI 2024', title:'Hotel Travel Assistant', body:'A chatbot that finds hotels from plain language. <b>Groq LLM</b> for intent, <b>FAISS</b> for semantic search, <b>Neo4j</b> for graph questions, explained with SHAP and LIME.', chips:['Python','FAISS','Neo4j','Streamlit'], link:'https://github.com/omartamerr10/hotel-travel-assistant' },
+    duck: { tag:'PROJECT · WEB 2024', title:'Ducksplorer', body:'A <b>MERN travel planner</b>: real-time hotel and activity bookings, budgets and notifications. Yes, that duck back there is the mascot.', chips:['MongoDB','Express','React','Node.js'], link:'https://github.com/omartamerr10/ducksplorer-travel-planner' },
+    maze: { tag:'PROJECT · GAME 2024', title:'3D Maze Runner', body:'An infinite runner written from scratch in <b>C++ and OpenGL</b> with real-time lighting, materials and 3D models. You\'re standing in its brick walls.', chips:['C++','OpenGL','GLUT'], link:'https://github.com/omartamerr10/3d-maze-runner-opengl' },
+    more: { tag:'SECRET BLOCK', title:'Three more builds', body:'<b>JavaXSQL</b>, a database engine with B+ tree indexes. <b>The Last of Us: Legacy</b>, a turn-based survival game. <b>JOAL</b>, a platform for NGOs and donors.', chips:['Java','B+ trees','React'], link:'https://github.com/omartamerr10' },
+    bsh: { tag:'LEVEL 2 · INTERNSHIP 2024', title:'BSH Home Appliances Egypt', body:'<b>Pathfinder Intern.</b> Rotations through IT, marketing, logistics and HR, including the factory\'s IT infrastructure.', chips:['IT infrastructure','Operations'] },
+    iaxiom: { tag:'LEVEL 3 · JOB 2025', title:'I-Axiom Cloud ERP', body:'<b>Junior Software Developer.</b> Built ERP modules for client companies in C#, .NET and Oracle, with Razor Pages dashboards, pagination and filtering.', chips:['C#','.NET','Oracle','Razor Pages'] },
+    ball: { tag:'BONUS · OFF THE KEYBOARD', title:'Right wing since 2013', body:'I play professional handball in Egypt\'s premier league. Played the Partille Cup in Sweden, and won silver at the Egyptian Universities Championship.', chips:['Teamwork','Fast breaks'] },
+  };
+  const SKILLS = ['Python','JavaScript','Java','C#','C++','SQL','React','Node.js','Flask','Spring','.NET','PyTorch','MongoDB','Neo4j','Redis','Docker','OpenGL','FAISS','Git','Oracle','Arabic','English','Français'];
+
+  /* ---------------- level ---------------- */
+  const L = 232; // tiles
+  const solid = new Map(), blocks = [], coins = [], bugs = [], zones = [], signs = [], deco = [];
+  const key = (x, y) => x + ',' + y;
+  for (let x = 0; x < L; x++) for (let y = GROUND; y < ROWS; y++) solid.set(key(x, y), 'g');
+  const plat = (x, y, w, kind = 'p') => { for (let i = 0; i < w; i++) solid.set(key(x + i, y), kind); };
+  const block = (x, y, id) => { solid.set(key(x, y), 'b'); blocks.push({ x, y, id, used:false, bump:0 }); };
+  const coinRow = (x, y, n) => { for (let i = 0; i < n; i++) coins.push({ x:x + i, y, label:SKILLS[coins.length % SKILLS.length], got:false }); };
+  const bug = (x, a, b) => bugs.push({ x:x*T, y:(GROUND-1)*T + 8, vx:-1, a:a*T, b:b*T, dead:0 });
+  // zones paint the background buildings
+  zones.push({ x:0, w:26, kind:'cairo' }, { x:26, w:28, kind:'guc' }, { x:54, w:30, kind:'lab' }, { x:84, w:22, kind:'graph' }, { x:106, w:24, kind:'duck' }, { x:130, w:26, kind:'maze' }, { x:156, w:16, kind:'bsh' }, { x:172, w:22, kind:'office' }, { x:194, w:24, kind:'court' }, { x:218, w:14, kind:'finish' });
+  signs.push({ x:4, t:'CAIRO ►' }, { x:28, t:'GUC' }, { x:56, t:'THESIS LAB' }, { x:86, t:'HOTEL AI' }, { x:108, t:'DUCKSPLORER' }, { x:132, t:'MAZE RUNNER' }, { x:158, t:'BSH' }, { x:174, t:'I-AXIOM' }, { x:196, t:'COURT' }, { x:220, t:'HIRE ME ►' });
+  coinRow(9, 9, 5);
+  block(36, 8, 'guc'); coinRow(31, 8, 3); plat(40, 9, 4); coinRow(40, 7, 4);
+  plat(60, 9, 3); block(64, 8, 'thesis'); plat(67, 9, 3); coinRow(60, 7, 3); bug(70, 66, 80); coinRow(74, 9, 3);
+  block(92, 8, 'hotel'); plat(95, 7, 4); coinRow(95, 5, 4); bug(99, 88, 104);
+  block(114, 8, 'duck'); plat(118, 9, 2); plat(121, 7, 2); coinRow(121, 5, 2); bug(124, 110, 128); block(122, 3, 'more');
+  for (let x = 134; x < 152; x += 6){ plat(x, 11, 1, 'w'); plat(x, 10, 1, 'w'); }
+  block(142, 8, 'maze'); coinRow(136, 8, 2); coinRow(146, 8, 2); bug(144, 135, 151);
+  block(162, 8, 'bsh'); coinRow(159, 9, 2);
+  plat(176, 9, 5); block(184, 8, 'iaxiom'); coinRow(176, 7, 5); bug(186, 180, 192);
+  block(204, 8, 'ball'); bug(200, 197, 210); bug(212, 208, 216); coinRow(198, 9, 3);
+  const FLAG = 226;
+  const SKILL_T = coins.length, PROJ_T = blocks.length;
+  document.getElementById('hSkT').textContent = SKILL_T; document.getElementById('hPrT').textContent = PROJ_T;
+
+  /* ---------------- player ---------------- */
+  const P = { x:2*T, y:(GROUND-1)*T, w:20, h:30, vx:0, vy:0, on:false, face:1, coyote:0, jumpBuf:0, hurt:0, anim:0 };
+  const keys = { left:false, right:false, jump:false };
+  let state = 'title', camX = 0, scale = 1, W = 0, H = 0, offY = 0, padSpace = 0, found = 0, got = 0, fixed = 0, floaters = [], parts = [], t = 0, won = false;
+
+  const resize = () => { const dpr = Math.min(2, devicePixelRatio || 1); cv.width = innerWidth*dpr; cv.height = innerHeight*dpr; const touch = matchMedia('(hover:none)').matches && innerWidth < innerHeight; scale = Math.min(cv.height/VIEW_H, cv.width/400); W = cv.width/scale; H = VIEW_H; padSpace = touch ? 110*dpr/scale : 0; offY = cv.height/scale - VIEW_H - padSpace; g.imageSmoothingEnabled = false; };
+  resize(); addEventListener('resize', resize);
+
+  const isSolid = (tx, ty) => solid.has(key(tx, ty));
+  const hitBlock = (tx, ty) => { const b = blocks.find(b => b.x === tx && b.y === ty); if (!b) return; b.bump = 1; if (!b.used){ b.used = true; found++; document.getElementById('hPr').textContent = found; burst(tx*T + 16, ty*T, '#ffcc4d', 16); setTimeout(() => openCard(b.id), 260); } };
+
+  function move(dt){
+    const accel = P.on ? 2200 : 1400, max = 230, fr = P.on ? 1800 : 300;
+    if (keys.left && !keys.right){ P.vx = Math.max(-max, P.vx - accel*dt); P.face = -1; }
+    else if (keys.right && !keys.left){ P.vx = Math.min(max, P.vx + accel*dt); P.face = 1; }
+    else { const s = Math.sign(P.vx); P.vx -= s*Math.min(Math.abs(P.vx), fr*dt); }
+    P.coyote = P.on ? .1 : P.coyote - dt; P.jumpBuf -= dt;
+    if (P.jumpBuf > 0 && P.coyote > 0){ P.vy = -560; P.on = false; P.coyote = 0; P.jumpBuf = 0; }
+    if (!keys.jump && P.vy < -220) P.vy = -220; // short hop when released
+    P.vy = Math.min(900, P.vy + 1500*dt);
+    // horizontal
+    P.x += P.vx*dt; P.x = Math.max(0, Math.min(L*T - P.w, P.x));
+    let x0 = Math.floor(P.x/T), x1 = Math.floor((P.x + P.w - 1)/T), y0 = Math.floor(P.y/T), y1 = Math.floor((P.y + P.h - 1)/T);
+    for (let ty = y0; ty <= y1; ty++){ if (P.vx > 0 && isSolid(x1, ty)){ P.x = x1*T - P.w; P.vx = 0; } else if (P.vx < 0 && isSolid(x0, ty)){ P.x = (x0 + 1)*T; P.vx = 0; } }
+    // vertical
+    P.y += P.vy*dt; P.on = false;
+    x0 = Math.floor(P.x/T); x1 = Math.floor((P.x + P.w - 1)/T); y0 = Math.floor(P.y/T); y1 = Math.floor((P.y + P.h - 1)/T);
+    for (let tx = x0; tx <= x1; tx++){
+      if (P.vy > 0 && isSolid(tx, y1)){ P.y = y1*T - P.h; P.vy = 0; P.on = true; }
+      else if (P.vy < 0 && isSolid(tx, y0)){ P.y = (y0 + 1)*T; P.vy = 60; hitBlock(tx, y0); break; }
+    }
+    if (P.on && Math.abs(P.vx) > 20) P.anim += dt*Math.abs(P.vx)*.06; else P.anim = 0;
+    P.hurt = Math.max(0, P.hurt - dt);
+  }
+
+  function update(dt){
+    t += dt; move(dt);
+    // coins
+    coins.forEach(c => { if (c.got) return; const cx = c.x*T + 16, cy = c.y*T + 16; if (Math.abs(P.x + P.w/2 - cx) < 22 && Math.abs(P.y + P.h/2 - cy) < 26){ c.got = true; got++; document.getElementById('hSk').textContent = got; floaters.push({ x:cx, y:cy - 10, t:0, text:c.label, col:'#ffcc4d' }); burst(cx, cy, '#ffcc4d', 8); } });
+    // bugs
+    bugs.forEach(b => { if (b.dead){ b.dead += dt; return; } b.x += b.vx*55*dt; if (b.x < b.a || b.x > b.b) b.vx *= -1;
+      const ox = (P.x + P.w/2) - (b.x + 13), oy = (P.y + P.h) - (b.y + 4);
+      if (Math.abs(ox) < 22 && P.y + P.h > b.y && P.y < b.y + 22){
+        if (P.vy > 0 && oy < 16){ b.dead = .001; P.vy = -380; fixed++; document.getElementById('hBug').textContent = fixed; floaters.push({ x:b.x + 13, y:b.y - 8, t:0, text:'BUG FIXED', col:'#7ee2a8' }); burst(b.x + 13, b.y + 8, '#7ee2a8', 12); }
+        else if (!P.hurt){ P.hurt = 1; P.vx = -Math.sign(ox || 1)*-260; P.vy = -280; floaters.push({ x:P.x, y:P.y - 10, t:0, text:'OUCH', col:'#ff8f8f' }); }
+      } });
+    blocks.forEach(b => b.bump = Math.max(0, b.bump - dt*5));
+    floaters = floaters.filter(f => (f.t += dt) < 1.2);
+    parts = parts.filter(p => { p.t += dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 900*dt; return p.t < .7; });
+    if (!won && P.x > FLAG*T - 10){ won = true; burst(FLAG*T + 8, (GROUND-6)*T, '#ffcc4d', 40); setTimeout(() => openCard('end'), 700); }
+    const target = Math.max(0, Math.min(L*T - W, P.x - W*.38)); camX += (target - camX)*Math.min(1, dt*6);
+  }
+  function burst(x, y, col, n){ if (reduce) return; for (let i = 0; i < n; i++) parts.push({ x, y, vx:(Math.random()*2 - 1)*220, vy:-Math.random()*320, t:0, col }); }
+
+  /* ---------------- drawing ---------------- */
+  const sky = () => { const gr = g.createLinearGradient(0, -offY, 0, H); gr.addColorStop(0, '#0f1a35'); gr.addColorStop(.55, '#2d3f6e'); gr.addColorStop(.82, '#c9825a'); gr.addColorStop(1, '#f0c27a'); g.fillStyle = gr; g.fillRect(0, -offY, W, H + offY);
+    g.fillStyle = 'rgba(255,240,210,.85)'; g.beginPath(); g.arc(W*.72 - camX*.02, H*.24, 26, 0, 7); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.7)'; for (let i = 0; i < 40; i++){ const sx = ((i*137.5 - camX*.03) % W + W) % W, sy = (i*53) % (H*.45); g.fillRect(sx, sy, 2, 2); } };
+  const pyramids = () => { const off = camX*.15; g.fillStyle = '#b77b4f'; for (let i = -1; i < 8; i++){ const bx = i*520 - (off % 520) + 120; const s = i % 2 ? 1 : .7; g.beginPath(); g.moveTo(bx, H - 64); g.lineTo(bx + 130*s, H - 64 - 130*s); g.lineTo(bx + 260*s, H - 64); g.fill(); g.fillStyle = '#9d6640'; g.beginPath(); g.moveTo(bx + 130*s, H - 64 - 130*s); g.lineTo(bx + 260*s, H - 64); g.lineTo(bx + 150*s, H - 64); g.fill(); g.fillStyle = '#b77b4f'; } };
+  const skyline = () => { const off = camX*.35; g.fillStyle = '#1d2a4d'; for (let i = -1; i < 30; i++){ const bx = i*90 - (off % 90); const h = 70 + ((i*37 + Math.floor(off/90)*37) % 60 + 60) % 60; g.fillRect(bx, H - 64 - h, 70, h); if ((i + Math.floor(off/90)) % 4 === 0){ g.fillRect(bx + 30, H - 64 - h - 46, 8, 46); g.beginPath(); g.arc(bx + 34, H - 64 - h - 46, 7, Math.PI, 0); g.fill(); } if ((i + Math.floor(off/90)) % 5 === 2){ g.beginPath(); g.arc(bx + 35, H - 64 - h, 26, Math.PI, 0); g.fill(); } }
+    g.fillStyle = 'rgba(255,214,140,.55)'; for (let i = -1; i < 30; i++){ const bx = i*90 - (off % 90); for (let w = 0; w < 4; w++) if (((i + w + Math.floor(off/90)) % 3) === 0) g.fillRect(bx + 10 + w*14, H - 110 + (w % 2)*16, 6, 8); } };
+  function zoneArt(z){
+    const x = z.x*T - camX, w = z.w*T, gy = GROUND*T; if (x > W || x + w < 0) return;
+    g.save();
+    if (z.kind === 'guc'){ g.fillStyle = '#e8dcc5'; g.fillRect(x + 60, gy - 210, 380, 210); g.fillStyle = '#c9b48f'; for (let r = 0; r < 4; r++) for (let c = 0; c < 8; c++) g.fillRect(x + 80 + c*44, gy - 190 + r*44, 26, 28); g.fillStyle = '#7a2e2e'; g.fillRect(x + 210, gy - 70, 70, 70); g.fillStyle = '#1d2a4d'; g.font = '14px "Press Start 2P"'; g.fillText('GUC', x + 222, gy - 222); }
+    if (z.kind === 'lab'){ g.fillStyle = 'rgba(141,183,255,.18)'; for (let i = 0; i < 6; i++) for (let j = 0; j < 5; j++){ g.beginPath(); g.arc(x + 120 + i*90, gy - 300 + j*50 + Math.sin(t*2 + i + j)*4, 3, 0, 7); g.fill(); } g.strokeStyle = 'rgba(141,183,255,.25)'; g.lineWidth = 1; for (let i = 0; i < 5; i++){ g.beginPath(); g.moveTo(x + 120 + i*90, gy - 300); g.lineTo(x + 210 + i*90, gy - 100); g.stroke(); } }
+    if (z.kind === 'graph'){ const nodes = [[80,-260],[200,-320],[320,-240],[150,-170],[420,-300],[520,-190],[260,-150]]; g.strokeStyle = 'rgba(47,199,167,.45)'; g.lineWidth = 2; [[0,1],[1,2],[2,3],[0,3],[2,4],[4,5],[3,6],[6,5]].forEach(([a,b]) => { g.beginPath(); g.moveTo(x + nodes[a][0], gy + nodes[a][1]); g.lineTo(x + nodes[b][0], gy + nodes[b][1]); g.stroke(); }); nodes.forEach(([nx, ny], i) => { g.fillStyle = i % 3 ? '#2fc7a7' : '#ffcc4d'; g.beginPath(); g.arc(x + nx, gy + ny, 7 + Math.sin(t*3 + i)*1.5, 0, 7); g.fill(); }); }
+    if (z.kind === 'duck'){ const dx = x + 300 + Math.sin(t*.8)*80, dy = gy - 30; g.fillStyle = '#ffcc4d'; g.fillRect(dx, dy - 22, 30, 20); g.fillRect(dx + 18, dy - 38, 18, 18); g.fillStyle = '#e8853a'; g.fillRect(dx + 34, dy - 30, 10, 6); g.fillStyle = '#0d1220'; g.fillRect(dx + 28, dy - 34, 3, 3); g.fillStyle = '#a2482b'; g.fillRect(dx + 14, dy - 44, 26, 6); g.fillRect(dx + 20, dy - 50, 14, 6); g.fillStyle = '#e8853a'; g.fillRect(dx + 6, dy - 2, 4, 6); g.fillRect(dx + 18, dy - 2, 4, 6); }
+    if (z.kind === 'maze' && brick){ for (let i = 0; i < 7; i++){ const bx = x + 40 + i*110; g.globalAlpha = .55; g.drawImage(brick, bx, gy - 220, 90, 220); g.globalAlpha = 1; } }
+    if (z.kind === 'bsh'){ g.fillStyle = '#3b4a6b'; g.fillRect(x + 40, gy - 170, 420, 170); g.fillStyle = '#2a3654'; for (let i = 0; i < 4; i++){ g.beginPath(); g.moveTo(x + 40 + i*105, gy - 170); g.lineTo(x + 92 + i*105, gy - 210); g.lineTo(x + 145 + i*105, gy - 170); g.fill(); } g.fillRect(x + 380, gy - 260, 26, 90); g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.arc(x + 393, gy - 275 - (t*20 % 30), 12, 0, 7); g.fill(); g.fillStyle = '#9fb3d6'; g.font = '14px "Press Start 2P"'; g.fillText('BSH', x + 70, gy - 140); }
+    if (z.kind === 'office'){ g.fillStyle = '#26365c'; g.fillRect(x + 80, gy - 300, 260, 300); g.fillStyle = '#8db7ff'; for (let r = 0; r < 8; r++) for (let c = 0; c < 5; c++) if ((r*5 + c + Math.floor(t)) % 7) g.fillRect(x + 100 + c*46, gy - 284 + r*34, 30, 20); g.fillStyle = '#e8dcc5'; g.font = '12px "Press Start 2P"'; g.fillText('I-AXIOM', x + 156, gy - 312); }
+    if (z.kind === 'court'){ g.fillStyle = '#4b6fb5'; g.fillRect(x, gy - 6, w, 6); g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 3; g.strokeRect(x + w - 90, gy - 96, 70, 96); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1; for (let i = 0; i < 6; i++){ g.beginPath(); g.moveTo(x + w - 90 + i*14, gy - 96); g.lineTo(x + w - 90 + i*14, gy); g.stroke(); } g.fillStyle = '#d94f4f'; const gx = x + w - 60, gk = gy - 36 + Math.sin(t*3)*6; g.fillRect(gx, gk - 20, 18, 28); g.fillStyle = '#f0c8a0'; g.fillRect(gx + 3, gk - 34, 12, 12); }
+    if (z.kind === 'finish'){ const fx = FLAG*T - camX; g.fillStyle = '#e8dcc5'; g.fillRect(fx + 6, gy - 260, 6, 260); const wave = Math.sin(t*6)*4; g.fillStyle = won ? '#ffcc4d' : '#d94f4f'; g.beginPath(); g.moveTo(fx + 12, gy - 258); g.lineTo(fx + 70, gy - 240 + wave); g.lineTo(fx + 12, gy - 222); g.fill(); g.fillStyle = '#1d2a4d'; g.fillRect(fx + 90, gy - 150, 150, 150); g.fillStyle = '#ffcc4d'; g.fillRect(fx + 145, gy - 70, 40, 70); for (let i = 0; i < 5; i++) g.fillRect(fx + 90 + i*32, gy - 166, 22, 16); }
+    g.restore();
+  }
+  function tiles(){
+    const x0 = Math.floor(camX/T) - 1, x1 = x0 + Math.ceil(W/T) + 2;
+    for (let x = x0; x <= x1; x++) for (let y = 0; y < ROWS; y++){ const k = solid.get(key(x, y)); if (!k) continue; const sx = x*T - camX, sy = y*T;
+      if (k === 'g'){ g.fillStyle = y === GROUND ? '#d9a55c' : '#a8733f'; g.fillRect(sx, sy, T, T); if (y === GROUND){ g.fillStyle = '#efc27f'; g.fillRect(sx, sy, T, 6); g.fillStyle = '#b8823f'; g.fillRect(sx + (x*7 % 20), sy + 14, 6, 4); } else { g.fillStyle = '#946233'; g.fillRect(sx + (x*11 % 24), sy + 10, 5, 5); } }
+      else if (k === 'p'){ g.fillStyle = '#7a4a2a'; g.fillRect(sx, sy, T, T); g.fillStyle = '#c98a4f'; g.fillRect(sx + 2, sy + 2, T - 4, 8); g.fillStyle = '#5c361d'; g.fillRect(sx, sy + T - 4, T, 4); }
+      else if (k === 'w'){ if (brick) g.drawImage(brick, sx, sy, T, T); else { g.fillStyle = '#8a4a36'; g.fillRect(sx, sy, T, T); } g.strokeStyle = 'rgba(0,0,0,.35)'; g.strokeRect(sx + .5, sy + .5, T - 1, T - 1); }
+      else if (k === 'b'){ const b = blocks.find(b => b.x === x && b.y === y); const by = sy - Math.sin(b.bump*Math.PI)*8; if (b.used){ g.fillStyle = '#7d5a3a'; g.fillRect(sx, by, T, T); g.fillStyle = '#5e4129'; g.fillRect(sx + 4, by + 4, T - 8, T - 8); }
+        else { const pulse = .5 + Math.sin(t*5)*.5; g.fillStyle = `rgba(255,204,77,${.25*pulse})`; g.fillRect(sx - 4, by - 4, T + 8, T + 8); g.fillStyle = '#ffcc4d'; g.fillRect(sx, by, T, T); g.fillStyle = '#c47b17'; g.fillRect(sx, by + T - 4, T, 4); g.fillRect(sx + T - 4, by, 4, T); g.fillStyle = '#7a3d07'; g.font = '16px "Press Start 2P"'; g.fillText('?', sx + 8, by + 24); } } }
+  }
+  function drawCoins(){ coins.forEach(c => { if (c.got) return; const sx = c.x*T - camX + 16, sy = c.y*T + 16 + Math.sin(t*4 + c.x)*3; if (sx < -20 || sx > W + 20) return; const sq = Math.abs(Math.sin(t*3 + c.x)); g.fillStyle = '#ffcc4d'; g.fillRect(sx - 9*sq, sy - 11, 18*sq + 1, 22); g.fillStyle = '#c47b17'; g.fillRect(sx - 3*sq, sy - 6, 6*sq + 1, 12);
+      const dx = Math.abs(P.x + P.w/2 - (c.x*T + 16)); if (dx < 110){ g.fillStyle = 'rgba(13,18,32,.75)'; g.font = '9px "Press Start 2P"'; const tw = g.measureText(c.label).width; g.fillRect(sx - tw/2 - 5, sy - 34, tw + 10, 16); g.fillStyle = '#fff'; g.fillText(c.label, sx - tw/2, sy - 22); } }); }
+  function drawBugs(){ bugs.forEach(b => { if (b.dead > .5) return; const sx = b.x - camX, sy = b.y; if (sx < -40 || sx > W + 40) return; const sq = b.dead ? 1 - b.dead*2 : 1;
+      g.save(); g.translate(sx + 13, sy + 22); g.scale(1, sq); g.fillStyle = '#4ade80'; g.fillRect(-13, -18, 26, 16); g.fillStyle = '#166534'; g.fillRect(-13, -10, 26, 3); g.fillStyle = '#0d1220'; g.fillRect(b.vx < 0 ? -11 : 5, -16, 5, 5); const leg = Math.sin(t*14 + b.x)*2; g.fillRect(-10, -2, 3, 4 + leg); g.fillRect(0, -2, 3, 4 - leg); g.fillRect(8, -2, 3, 4 + leg); g.fillRect(-4, -24, 2, 7); g.fillRect(3, -24, 2, 7); g.restore(); }); }
+  function drawPlayer(){ if (P.hurt && Math.floor(t*20) % 2) return; const sx = Math.round(P.x - camX), sy = Math.round(P.y); g.save(); g.translate(sx + P.w/2, sy); g.scale(P.face, 1);
+    const sw = Math.sin(P.anim)*5, jump = !P.on;
+    g.fillStyle = '#1e2a44'; g.fillRect(-8, 20, 6, 10 + (jump ? -2 : sw > 0 ? 0 : -1)); g.fillRect(2, 20, 6, 10 + (jump ? -3 : sw > 0 ? -1 : 0)); g.translate(0, 0);
+    g.fillStyle = '#245fa8'; g.fillRect(-10, 9, 20, 13); g.fillStyle = '#1c4c87'; g.fillRect(-10, 19, 20, 3);
+    g.fillStyle = '#b77d58'; g.fillRect(-13, 10 + (jump ? -6 : sw*.4), 4, 9); g.fillRect(9, 10 + (jump ? -6 : -sw*.4), 4, 9);
+    g.fillStyle = '#c48a62'; g.fillRect(-7, -4, 14, 14); g.fillStyle = '#1a1310'; g.fillRect(-8, -7, 16, 6); g.fillRect(-8, -4, 3, 5); g.fillStyle = '#0d1220'; g.fillRect(3, 1, 2, 3); g.fillStyle = '#fff'; g.fillRect(0, 6, 6, 2); g.fillStyle = '#2b1c14'; g.fillRect(-6, 7, 12, 2);
+    g.restore(); }
+  function drawSigns(){ signs.forEach(s => { const sx = s.x*T - camX, gy = GROUND*T; if (sx < -200 || sx > W + 50) return; g.fillStyle = '#5c361d'; g.fillRect(sx + 20, gy - 56, 6, 56); g.font = '10px "Press Start 2P"'; const tw = g.measureText(s.t).width; g.fillStyle = '#fff8ec'; g.fillRect(sx, gy - 82, tw + 20, 30); g.fillStyle = '#7a4a2a'; g.fillRect(sx, gy - 56, tw + 20, 4); g.fillStyle = '#3a1f05'; g.fillText(s.t, sx + 10, gy - 62); }); }
+  function draw(){
+    g.setTransform(scale, 0, 0, scale, 0, 0); g.fillStyle = '#0f1a35'; g.fillRect(0, 0, W, H + offY + 2);
+    g.setTransform(scale, 0, 0, scale, 0, offY*scale);
+    sky(); pyramids(); skyline(); zones.forEach(zoneArt); drawSigns(); tiles(); drawCoins(); drawBugs(); drawPlayer();
+    if (padSpace){ g.fillStyle = '#a8733f'; g.fillRect(0, VIEW_H, W, padSpace + 2); }
+    parts.forEach(p => { g.fillStyle = p.col; g.globalAlpha = 1 - p.t/.7; g.fillRect(p.x - camX, p.y, 4, 4); }); g.globalAlpha = 1;
+    floaters.forEach(f => { g.globalAlpha = 1 - f.t/1.2; g.fillStyle = f.col; g.font = '10px "Press Start 2P"'; const tw = g.measureText(f.text).width; g.fillText(f.text, f.x - camX - tw/2, f.y - f.t*40); }); g.globalAlpha = 1;
+    if (state === 'play' && P.x < 5*T && !reduce){ g.fillStyle = 'rgba(13,18,32,.7)'; g.font = '10px "Press Start 2P"'; const msg = matchMedia('(hover:none)').matches ? 'USE THE BUTTONS' : '→ TO RUN · ↑ TO JUMP'; const tw = g.measureText(msg).width, hx = Math.max(6, P.x - camX - tw/2); g.fillRect(hx, P.y - 50, tw + 16, 24); g.fillStyle = '#fff'; g.fillText(msg, hx + 8, P.y - 33); }
+  }
+
+  /* ---------------- cards ---------------- */
+  const modal = document.getElementById('modal'), mcard = document.getElementById('mcard');
+  function openCard(id){
+    state = 'card'; keys.left = keys.right = keys.jump = false; padBtns.forEach(b => b.classList.remove('on'));
+    if (id === 'end'){ mcard.innerHTML = `<p class="tag">QUEST COMPLETE</p><h2 id="mTitle">You made it to the flag!</h2><p>Skills collected: <b>${got}/${SKILL_T}</b> · Projects found: <b>${found}/${PROJ_T}</b> · Bugs fixed: <b>${fixed}</b></p><p>I'm Omar Tamer, a software engineer in Cairo, open to graduate and junior roles. Thanks for playing. Let's talk.</p><p><b>omartamer1009@gmail.com</b></p><div class="mrow"><a class="mbtn go" href="mailto:omartamer1009@gmail.com">EMAIL ME</a><a class="mbtn lk" href="https://linkedin.com/in/omar-tamer-farouk">LINKEDIN</a><a class="mbtn lk" href="../assets/Omar-Tamer-CV.pdf" target="_blank" rel="noopener">RÉSUMÉ</a><button class="mbtn lk" type="button" id="again">PLAY AGAIN</button></div>`;
+      mcard.querySelector('#again').addEventListener('click', () => location.reload()); }
+    else { const c = CARDS[id]; mcard.innerHTML = `<p class="tag">${c.tag}</p><h2 id="mTitle">${c.title}</h2><p>${c.body}</p><ul>${c.chips.map(x => `<li>${x}</li>`).join('')}</ul><div class="mrow"><button class="mbtn go" type="button" id="cont">CONTINUE ▶</button>${c.link ? `<a class="mbtn lk" href="${c.link}">CODE ↗</a>` : ''}</div>`;
+      mcard.querySelector('#cont').addEventListener('click', closeCard); }
+    modal.classList.add('on'); setTimeout(() => (mcard.querySelector('#cont') || mcard.querySelector('a'))?.focus(), 60);
+  }
+  function closeCard(){ modal.classList.remove('on'); state = 'play'; last = performance.now(); }
+
+  /* ---------------- input ---------------- */
+  const KM = { ArrowLeft:'left', a:'left', A:'left', ArrowRight:'right', d:'right', D:'right', ArrowUp:'jump', w:'jump', W:'jump', ' ':'jump' };
+  addEventListener('keydown', e => {
+    if (state === 'title' && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); start(); return; }
+    if (state === 'card'){ if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' '){ if (!won && !e.target.closest('a')){ e.preventDefault(); closeCard(); } } return; }
+    if (e.key === 'Escape' || e.key === 'p'){ state = state === 'paused' ? 'play' : 'paused'; last = performance.now(); return; }
+    const k = KM[e.key]; if (k){ e.preventDefault(); if (k === 'jump' && !keys.jump) P.jumpBuf = .12; keys[k] = true; } });
+  addEventListener('keyup', e => { const k = KM[e.key]; if (k) keys[k] = false; });
+  const padBtns = [...document.querySelectorAll('#pad button')];
+  padBtns.forEach(b => { const k = b.dataset.k; const on = e => { e.preventDefault(); if (state !== 'play') return; if (k === 'jump') P.jumpBuf = .12; keys[k] = true; b.classList.add('on'); }; const off = () => { keys[k] = false; b.classList.remove('on'); };
+    b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off); });
+
+  /* ---------------- loop ---------------- */
+  let brick = null; const bi = new Image(); bi.onload = () => brick = bi; bi.src = '../assets/img/tex-brick.png';
+  let last = performance.now();
+  function start(){ document.getElementById('title').classList.add('hide'); state = 'play'; last = performance.now(); }
+  document.getElementById('startBtn').addEventListener('click', start);
+  const loop = now => { const dt = Math.min(.033, (now - last)/1000); last = now;
+    if (state === 'play') update(dt); else if (state === 'title'){ t += dt; camX = (Math.sin(t*.12)*.5 + .5)*Math.min(L*T - W, 2400); }
+    draw(); if (state === 'paused'){ g.fillStyle = 'rgba(8,12,24,.6)'; g.fillRect(0, -offY, W, H + offY); g.fillStyle = '#ffcc4d'; g.font = '20px "Press Start 2P"'; const s = 'PAUSED'; g.fillText(s, W/2 - g.measureText(s).width/2, H/2); }
+    requestAnimationFrame(loop); };
+  document.fonts && document.fonts.load('10px "Press Start 2P"');
+  requestAnimationFrame(loop);
+  window.__quest = { P, keys, openCard, get state(){ return state; } };
+})();
+</script>
+<!-- view switcher: shared by every version -->
+<div class="ovs" data-pos="tr" data-current="arcade">
+  <button class="ovs-pill" type="button" aria-expanded="false" aria-controls="ovsPanel"><span class="ovs-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span><span>Switch view</span></button>
+  <div class="ovs-panel" id="ovsPanel" role="menu" hidden>
+    <p class="ovs-h">Six ways to meet Omar</p>
+    <a role="menuitem" href="../pro/index.html" data-v="pro"><b style="--c:#1f5bb5">Professional</b><span>Clean and quick to read</span></a>
+    <a role="menuitem" href="../cinematic/index.html" data-v="cinematic"><b style="--c:#e8c98f">Cinematic 3D</b><span>12,000 particles, playable apps</span></a>
+    <a role="menuitem" href="../os/index.html" data-v="os"><b style="--c:#2fc7a7">OmarOS</b><span>A working desktop and terminal</span></a>
+    <a role="menuitem" href="../board/index.html" data-v="board"><b style="--c:#f2a65a">The Board</b><span>An infinite canvas to explore</span></a>
+    <a role="menuitem" href="../arcade/index.html" data-v="arcade"><b style="--c:#d94f4f">Omar's Quest</b><span>Play through my story</span></a>
+    <a role="menuitem" href="../og/index.html" data-v="og"><b style="--c:#8a7f6e">The OG</b><span>The original portfolio</span></a>
+    <a class="ovs-all" role="menuitem" href="../index.html">See all six side by side</a>
+  </div>
+</div>
+<style>
+.ovs{position:fixed;z-index:99990;font:500 14px/1.3 "Inter",system-ui,sans-serif;color:#0f1a2a}
+.ovs[data-pos="bl"]{left:max(16px,env(safe-area-inset-left,0px));bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.ovs[data-pos="br"]{right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.ovs[data-pos="tr"]{right:max(16px,env(safe-area-inset-right,0px));top:max(16px,env(safe-area-inset-top,0px))}
+.ovs[data-pos="tl"]{left:max(16px,env(safe-area-inset-left,0px));top:max(16px,env(safe-area-inset-top,0px))}
+.ovs-pill{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 16px 0 12px;border:0;border-radius:999px;background:rgba(255,255,255,.94);color:#0f1a2a;font:600 13.5px/1 "Inter",system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px -10px rgba(0,0,0,.45),0 0 0 1px rgba(15,26,42,.08);transition:transform .25s cubic-bezier(.16,1,.3,1)}
+.ovs-pill:hover{transform:translateY(-2px)}
+.ovs-dots{display:grid;grid-template-columns:repeat(6,6px);gap:3px}
+.ovs-dots i{width:6px;height:6px;border-radius:50%;background:#c3cad5}
+.ovs-dots i:nth-child(1){background:#1f5bb5}.ovs-dots i:nth-child(2){background:#e8c98f}.ovs-dots i:nth-child(3){background:#2fc7a7}.ovs-dots i:nth-child(4){background:#f2a65a}.ovs-dots i:nth-child(5){background:#d94f4f}.ovs-dots i:nth-child(6){background:#8a7f6e}
+.ovs-panel{position:absolute;width:290px;padding:10px;border-radius:18px;background:#fff;box-shadow:0 24px 60px -16px rgba(0,0,0,.5),0 0 0 1px rgba(15,26,42,.08);display:grid;gap:2px;transform-origin:bottom left;animation:ovsIn .3s cubic-bezier(.16,1,.3,1)}
+.ovs[data-pos^="b"] .ovs-panel{bottom:50px}
+.ovs[data-pos^="t"] .ovs-panel{top:50px;transform-origin:top right}
+.ovs[data-pos$="l"] .ovs-panel{left:0}
+.ovs[data-pos$="r"] .ovs-panel{right:0}
+.ovs-panel[hidden]{display:none}
+@keyframes ovsIn{from{opacity:0;transform:scale(.92) translateY(8px)}}
+.ovs-h{margin:4px 10px 8px;font:600 11px/1 "Inter",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#718096}
+.ovs-panel a{display:grid;gap:2px;padding:9px 10px;border-radius:12px;text-decoration:none;color:#0f1a2a;transition:background-color .15s}
+.ovs-panel a:hover,.ovs-panel a:focus-visible{background:#f1f4f8;outline:none}
+.ovs-panel a b{display:flex;align-items:center;gap:8px;font-weight:600}
+.ovs-panel a b::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c)}
+.ovs-panel a span{color:#5b6779;font-size:12.5px;padding-left:17px}
+.ovs-panel a[aria-current="page"]{background:#f1f4f8}
+.ovs-panel a[aria-current="page"] b::after{content:"You're here";margin-left:auto;font:500 11px/1 "Inter",system-ui,sans-serif;color:#718096}
+.ovs-panel .ovs-all{margin-top:4px;padding:11px 10px;border-radius:12px;background:#0f1a2a;color:#fff;font-weight:600;text-align:center}
+.ovs-panel .ovs-all:hover{background:#24324a}
+.ovs-veil{position:fixed;inset:0;z-index:99999;pointer-events:none;background:#0f1a2a;clip-path:circle(0% at var(--x,50%) var(--y,50%));transition:clip-path .6s cubic-bezier(.7,0,.2,1)}
+.ovs-veil.on{clip-path:circle(150% at var(--x,50%) var(--y,50%))}
+@media (prefers-reduced-motion:reduce){.ovs-panel{animation:none}.ovs-veil{transition:none}}
+</style>
+<script>
+(() => {
+  const root = document.querySelector('.ovs'), pill = root.querySelector('.ovs-pill'), panel = root.querySelector('.ovs-panel');
+  const cur = root.dataset.current;
+  try { localStorage.setItem('omar-view', cur); } catch {}
+  panel.querySelector(`[data-v="${cur}"]`)?.setAttribute('aria-current', 'page');
+  const toggle = (open) => { panel.hidden = !open; pill.setAttribute('aria-expanded', String(open)); if (open) panel.querySelector('a')?.focus(); };
+  pill.addEventListener('click', e => { e.stopPropagation(); toggle(panel.hidden); });
+  document.addEventListener('click', e => { if (!root.contains(e.target)) toggle(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden) { toggle(false); pill.focus(); } });
+  // circular wipe out of the page, in the colour of where you're going
+  const veil = document.createElement('div'); veil.className = 'ovs-veil'; document.body.appendChild(veil);
+  panel.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
+    if (a.getAttribute('aria-current') === 'page') { e.preventDefault(); toggle(false); return; }
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    e.preventDefault(); const r = pill.getBoundingClientRect();
+    veil.style.setProperty('--x', (r.left + r.width/2) + 'px'); veil.style.setProperty('--y', (r.top + r.height/2) + 'px');
+    veil.style.background = getComputedStyle(a.querySelector('b') || a).getPropertyValue('--c') || '#0f1a2a';
+    veil.classList.add('on'); setTimeout(() => { location.href = a.href; }, 560);
+  }));
+  addEventListener('pageshow', () => veil.classList.remove('on'));
+})();
+</script>
+
+</body>
+</html>

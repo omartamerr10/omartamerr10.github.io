@@ -1,344 +1,299 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Omar Tamer — Computer Engineer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Omar Tamer</title>
+<meta name="description" content="Omar Tamer, software engineer in Cairo. Six ways to see his work: Professional, Cinematic 3D, OmarOS, The Board, Omar's Quest and the original.">
+<meta name="theme-color" content="#0a0c11">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #0a0a0a;
-  --bg2: #111111;
-  --bg3: #161616;
-  --border: rgba(255,255,255,0.07);
-  --border-hover: rgba(255,255,255,0.18);
-  --text: #f0ede8;
-  --text-muted: #6b6966;
-  --text-secondary: #9b9693;
-  --accent: #e8d5b0;
-  --accent2: #c4a882;
-  --green: #4ade80;
-  --font-display: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-  --font-mono: 'DM Mono', monospace;
-  --radius: 12px;
+@font-face{font-family:"Bricolage Grotesque";font-weight:600;font-display:swap;src:url(assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(assets/fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:400;font-display:swap;src:url(assets/fonts/inter-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:500;font-display:swap;src:url(assets/fonts/inter-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:600;font-display:swap;src:url(assets/fonts/inter-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Press Start 2P";font-weight:400;font-display:swap;src:url(assets/fonts/press-start-2p-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Plex Arabic";font-weight:600;font-display:swap;src:url(assets/fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2) format("woff2");unicode-range:U+0600-06FF,U+FE70-FEFF}
+
+/* Layout: a lobby. Five doors in a row, one open at a time, each painted in the world it leads to. Night ground so every door's colour carries. */
+:root{
+  --bg:#0a0c11; --ink:#eef1f6; --muted:#a9b2c1; --faint:#7d8798; --line:rgba(255,255,255,.1); --sand:#e8c98f;
+  --display:"Bricolage Grotesque","Inter",system-ui,sans-serif; --text:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1); color-scheme:dark;
 }
-html { scroll-behavior: smooth; }
-  
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.7;
-  overflow-x: hidden;
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--text);-webkit-font-smoothing:antialiased;overflow-x:clip}
+h1,h2,h3,p,ul{margin:0}
+ul{padding:0;list-style:none}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--sand);outline-offset:3px;border-radius:8px}
+.wrap{padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:center;gap:16px;padding-block:22px}
+.me{display:flex;align-items:center;gap:12px;font:700 17px/1 var(--display)}
+.me img{width:36px;height:36px;border-radius:50%;object-fit:cover;object-position:50% 28%;background:#c8c8c8}
+.me small{display:block;font:500 12.5px/1.3 var(--text);color:var(--faint);margin-top:3px}
+.top .skip{margin-left:auto;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line);font-size:14px;font-weight:500;color:var(--muted);transition:color .2s,background-color .2s}
+.top .skip .short{display:none}
+.top .skip:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+
+.intro{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:40px;align-items:end;padding-block:28px 30px}
+.intro h1{font:700 clamp(44px,5.4vw,92px)/.95 var(--display);letter-spacing:-.04em}
+.intro h1 span{display:block;color:var(--sand)}
+.intro .lead{color:var(--muted);font-size:clamp(16px,.4vw + 14px,19px);max-width:46ch}
+.welcome{display:inline-flex;align-items:center;gap:10px;margin-top:16px;padding:9px 14px;border-radius:12px;background:rgba(232,201,143,.12);color:var(--sand);font-weight:500;font-size:14.5px}
+.welcome[hidden]{display:none}
+.welcome:hover{background:rgba(232,201,143,.2)}
+.choose{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-bottom:18px}
+.choose span{color:var(--faint);font-size:14px;margin-right:4px}
+.choose button{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.06);font-size:14px;font-weight:500;color:var(--muted);transition:background-color .2s,color .2s,transform .2s var(--ease)}
+.choose button:hover{background:rgba(255,255,255,.12);color:var(--ink);transform:translateY(-2px)}
+.choose button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* the deck */
+.deck{display:flex;gap:10px;height:min(66vh,640px);min-height:470px;padding-bottom:20px}
+.door{position:relative;flex:1 1 0;min-width:0;border-radius:26px;overflow:hidden;background:var(--c-bg);color:var(--c-ink);transition:flex-grow .7s var(--ease),transform .4s var(--ease),box-shadow .4s;cursor:pointer;isolation:isolate;outline-offset:4px}
+.door[data-open]{flex-grow:4.2;cursor:default}
+.door:not([data-open]):hover{transform:translateY(-6px)}
+.door .scene{position:absolute;inset:0;z-index:-1;transition:opacity .6s}
+.door:not([data-open]) .scene{opacity:.55}
+.door .rail{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:22px 18px;transition:opacity .35s}
+.door[data-open] .rail{opacity:0;pointer-events:none}
+.door .rail b{writing-mode:vertical-rl;transform:rotate(180deg);font:700 clamp(20px,1.6vw,28px)/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.door .rail i{width:12px;height:12px;border-radius:50%;background:var(--c-accent);box-shadow:0 0 18px var(--c-accent)}
+.door .info{position:absolute;left:0;right:0;bottom:0;padding:30px;display:grid;gap:12px;background:linear-gradient(to top,var(--c-fade) 0%,var(--c-fade) 55%,transparent);opacity:0;transform:translateY(20px);transition:opacity .45s,transform .6s var(--ease);pointer-events:none}
+.door[data-open] .info{opacity:1;transform:none;pointer-events:auto;transition-delay:.25s}
+.door .kind{display:flex;align-items:center;gap:10px;font:600 13px/1 var(--text);color:var(--c-accent)}
+.door h2{font:700 clamp(34px,3.2vw,56px)/1 var(--display);letter-spacing:-.03em}
+.door .tagline{font-size:17px;max-width:48ch;color:var(--c-muted)}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.facts li{padding:6px 11px;border-radius:999px;background:var(--c-chip);font:500 13px/1.2 var(--text);color:var(--c-ink)}
+.enter{justify-self:start;display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 24px;border-radius:999px;background:var(--c-accent);color:var(--c-on);font:600 16px/1 var(--text);transition:transform .25s var(--ease),filter .2s;margin-top:4px}
+.enter:hover{transform:translateX(4px);filter:brightness(1.08)}
+.enter .arr{transition:transform .25s var(--ease)}
+.enter:hover .arr{transform:translateX(4px)}
+.door .key{position:absolute;top:20px;right:20px;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font:600 13px/1 var(--text);background:var(--c-chip);color:var(--c-ink);opacity:.8}
+
+/* door palettes */
+.d-pro{--c-bg:#f6f7f9;--c-ink:#0d1626;--c-muted:#4a5568;--c-accent:#1f5bb5;--c-on:#fff;--c-chip:rgba(13,22,38,.07);--c-fade:rgba(246,247,249,.97)}
+.d-cin{--c-bg:#05070c;--c-ink:#eef2f7;--c-muted:#b4bfcd;--c-accent:#e8c98f;--c-on:#1a1307;--c-chip:rgba(255,255,255,.1);--c-fade:rgba(5,7,12,.94)}
+.d-os{--c-bg:#0e2440;--c-ink:#eef5ff;--c-muted:#bcd0e8;--c-accent:#2fc7a7;--c-on:#03241d;--c-chip:rgba(255,255,255,.12);--c-fade:rgba(10,24,44,.94)}
+.d-board{--c-bg:#f4f1ea;--c-ink:#1b1a17;--c-muted:#5b574f;--c-accent:#e8853a;--c-on:#fff;--c-chip:rgba(27,26,23,.07);--c-fade:rgba(244,241,234,.97)}
+.d-arc{--c-bg:#1a2140;--c-ink:#fff8ec;--c-muted:#e3d6bf;--c-accent:#ffcc4d;--c-on:#3a1f05;--c-chip:rgba(255,255,255,.12);--c-fade:rgba(22,24,48,.94)}
+.d-og{--c-bg:#0a0a0a;--c-ink:#f0ede8;--c-muted:#9b9693;--c-accent:#e8d5b0;--c-on:#1a1307;--c-chip:rgba(255,255,255,.08);--c-fade:rgba(10,10,10,.95)}
+.d-arc h2{font:400 clamp(22px,2vw,34px)/1.3 "Press Start 2P",monospace;letter-spacing:0}
+
+/* mini scenes */
+.sc-pro{padding:28px 30px;display:grid;align-content:start;gap:12px}
+.sc-pro .bar{height:12px;border-radius:6px;background:#dfe5ec;transform-origin:0 50%;animation:draw 4.5s var(--ease) infinite}
+.sc-pro .bar.h{height:26px;width:62%;background:#0d1626}
+.sc-pro .bar.a{width:40%;background:#1f5bb5}
+.sc-pro .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.sc-pro .tile{aspect-ratio:16/10;border-radius:12px;background:#ede6da;animation:rise 4.5s var(--ease) infinite}
+.sc-pro .tile:nth-child(2){animation-delay:.15s;background:#dfe5ec}
+.sc-pro .face{position:absolute;right:30px;top:28px;width:110px;height:110px;border-radius:24px;background:#ede6da;overflow:hidden}
+.sc-pro .face img{width:100%;height:100%;object-fit:cover;object-position:50% 30%}
+@keyframes draw{0%{transform:scaleX(0)}25%,85%{transform:scaleX(1)}100%{transform:scaleX(1);opacity:0}}
+@keyframes rise{0%,8%{opacity:0;transform:translateY(16px)}30%,85%{opacity:1;transform:none}100%{opacity:0}}
+.sc-os{background:radial-gradient(60% 50% at 30% 30%,rgba(31,91,181,.6),transparent 70%),radial-gradient(50% 50% at 80% 80%,rgba(201,169,120,.4),transparent 70%),#0e2440}
+.sc-os .w{position:absolute;border-radius:10px;background:#fbfcfd;box-shadow:0 20px 40px -12px rgba(0,0,0,.6);overflow:hidden;animation:pop 6s var(--ease) infinite}
+.sc-os .w::before{content:"";display:block;height:18px;background:#eef1f5;border-bottom:1px solid #dfe5ec;background-image:radial-gradient(circle at 10px 9px,#ff5f57 3.5px,transparent 4px),radial-gradient(circle at 22px 9px,#febc2e 3.5px,transparent 4px),radial-gradient(circle at 34px 9px,#28c840 3.5px,transparent 4px)}
+.sc-os .w1{left:8%;top:12%;width:46%;height:42%}
+.sc-os .w2{left:36%;top:34%;width:44%;height:40%;background:#0d1117;animation-delay:.6s}
+.sc-os .w2::before{background-color:#161b22;border-color:#222b36}
+.sc-os .w2 p{font:12px/1.6 ui-monospace,Menlo,monospace;color:#7ee2a8;padding:8px 10px}
+.sc-os .w2 p::after{content:"▋";animation:blinkc 1s steps(2) infinite}
+.sc-os .w3{left:20%;top:58%;width:30%;height:26%;background:#7a3523;animation-delay:1.2s}
+.sc-os .dock{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:8px;padding:6px 8px;border-radius:14px;background:rgba(255,255,255,.16)}
+.sc-os .dock i{width:24px;height:24px;border-radius:7px;background:var(--k)}
+@keyframes pop{0%{opacity:0;transform:scale(.85) translateY(14px)}12%,80%{opacity:1;transform:none}100%{opacity:0;transform:scale(.95)}}
+@keyframes blinkc{50%{opacity:0}}
+.sc-board{background-color:#f4f1ea;background-image:radial-gradient(#d9d2c3 1.3px,transparent 1.4px);background-size:22px 22px;animation:pan 14s linear infinite}
+@keyframes pan{to{background-position:220px 110px}}
+.sc-board .n{position:absolute;border-radius:10px;background:#fff;box-shadow:0 10px 24px -12px rgba(60,45,20,.45);animation:float 7s ease-in-out infinite}
+.sc-board .n.y{background:#ffe58a;border-radius:3px}
+.sc-board .n.g{background:#c9f0d9;border-radius:3px}
+.sc-board svg{position:absolute;inset:0;width:100%;height:100%}
+.sc-board svg path{fill:none;stroke:#e8853a;stroke-width:2;stroke-dasharray:6 7;animation:dash 3s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-26}}
+@keyframes float{50%{transform:translate(8px,-8px) rotate(1.5deg)}}
+.sc-canvas{width:100%;height:100%;display:block}
+.sc-og{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;padding:30px;background:#0a0a0a}
+.og-txt{display:grid;gap:6px;animation:rise 6s var(--ease) infinite}
+.og-txt small{font:400 11px/1 ui-monospace,Menlo,monospace;color:#6b6966;letter-spacing:.06em}
+.og-txt b{font:800 clamp(30px,3vw,52px)/.9 system-ui,sans-serif;letter-spacing:-.05em;color:#f0ede8}
+.og-txt b.t{color:#e8d5b0}
+.og-txt i{display:block;height:8px;width:70%;background:#1c1c1b;border-radius:4px;margin-top:6px}
+.og-txt span{justify-self:start;margin-top:10px;padding:8px 12px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);font:400 11px/1 ui-monospace,Menlo,monospace;color:#f0ede8;letter-spacing:.08em}
+.og-ph{aspect-ratio:5/6;border-radius:10px;overflow:hidden;background:#c8c8c8;animation:rise 6s var(--ease) .2s infinite}
+.og-ph img{width:100%;height:100%;object-fit:cover;object-position:50% 30%}
+
+/* footer */
+.how{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;padding-block:20px 40px;color:var(--faint);font-size:14.5px;border-top:1px solid var(--line);margin-top:10px}
+.how b{color:var(--muted);font-weight:500}
+.how a{color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+
+/* the door opening into its world */
+.portal{position:fixed;z-index:100;border-radius:26px;pointer-events:none;transition:all .75s cubic-bezier(.7,0,.2,1)}
+.portal span{position:absolute;inset:0;display:grid;place-items:center;font:700 clamp(30px,4vw,64px)/1 var(--display);letter-spacing:-.03em;opacity:0;transition:opacity .4s .35s}
+.portal.full span{opacity:1}
+
+@media (max-width:900px){
+  .intro{grid-template-columns:minmax(0,1fr);gap:16px}
+  .deck{flex-direction:column;height:auto;min-height:0}
+  .door{flex:none;height:86px;border-radius:22px;transition:height .6s var(--ease)}
+  .door[data-open]{height:520px}
+  .door .rail{flex-direction:row;align-items:center;padding:0 22px}
+  .door .rail b{writing-mode:horizontal-tb;transform:none;font-size:22px}
+  .door .info{padding:22px}
+  .door .key{display:none}
+  .door:not([data-open]) .scene{opacity:.18}
+  .top .skip .long{display:none}.top .skip .short{display:inline}
+  .me small{display:none}
+  .door:not([data-open]):hover{transform:none}
 }
-
-  /* Grain overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 1000;
-  }
-
-/* Nav */
-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1.25rem 3rem; display: flex; align-items: center; justify-content: space-between; transition: background 0.3s, border-color 0.3s; border-bottom: 1px solid transparent; }
-nav.scrolled { background: rgba(10,10,10,0.92); backdrop-filter: blur(12px); border-color: var(--border); }
-.nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; color: var(--text); text-decoration: none; letter-spacing: -0.02em; }
-.nav-links { display: flex; gap: 2rem; list-style: none; }
-.nav-links a { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; }
-.nav-links a:hover { color: var(--text); }
-
-/* Hero */
-.hero { min-height: 100vh; display: flex; align-items: center; justify-content: space-between; gap: 4rem; padding: 7rem 3rem 4rem; }
-.hero-left { flex: 1; }
-.hero-counter { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 1.5rem; opacity: 0; animation: fadeUp 0.7s ease 0.2s forwards; }
-.hero-title { font-family: var(--font-display); font-size: clamp(3rem, 6vw, 5.5rem); font-weight: 800; line-height: 1; letter-spacing: -0.04em; margin-bottom: 1rem; opacity: 0; animation: fadeUp 0.7s ease 0.35s forwards; }
-.hero-title .accent { color: var(--accent); }
-.hero-subtitle { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2rem; opacity: 0; animation: fadeUp 0.7s ease 0.5s forwards; }
-.hero-desc { max-width: 420px; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; margin-bottom: 2rem; opacity: 0; animation: fadeUp 0.7s ease 0.6s forwards; }
-.hero-tags { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2.5rem; opacity: 0; animation: fadeUp 0.7s ease 0.7s forwards; }
-.hero-tag { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; padding: 0.3rem 0.7rem; border: 1px solid var(--border); }
-.hero-cta { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.5rem; border: 1px solid var(--border-hover); color: var(--text); text-decoration: none; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; transition: all 0.2s; opacity: 0; animation: fadeUp 0.7s ease 0.8s forwards; }
-.hero-cta:hover { background: var(--bg2); border-color: var(--accent); color: var(--accent); }
-
-/* Hero photo */
-.hero-photo-wrap { flex-shrink: 0; width: 400px; height: 480px; border: 1px solid var(--border-hover); border-radius: var(--radius); overflow: hidden; opacity: 0; animation: fadeUp 0.7s ease 0.5s forwards; margin-right: 8rem; }
-.hero-photo-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
-
-/* Sections */
-section { padding: 6rem 3rem; }
-.section-label { font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent2); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3rem; display: flex; align-items: center; gap: 1rem; }
-.section-label::after { content: ''; height: 1px; background: var(--border); width: 60px; }
-
-/* About */
-.about { border-top: 1px solid var(--border); }
-.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; }
-.about-title { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 1.5rem; }
-.about-title span { color: var(--accent); }
-.about-text { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.9; margin-bottom: 1.2rem; }
-.stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 1.1rem 0; border-bottom: 1px solid var(--border); }
-.stat-row:first-child { border-top: 1px solid var(--border); }
-.stat-label { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
-.stat-value { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; }
-
-/* Skills */
-.skills { background: var(--bg2); border-top: 1px solid var(--border); }
-.skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
-.skill-group { background: var(--bg2); padding: 2rem; }
-.skill-group-title { font-family: var(--font-mono); font-size: 0.65rem; color: var(--accent2); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 1.25rem; }
-.skill-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.skill-tag { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); padding: 0.25rem 0.6rem; border: 1px solid var(--border); transition: all 0.2s; }
-.skill-tag:hover { border-color: var(--accent); color: var(--accent); }
-
-/* Projects */
-.projects { border-top: 1px solid var(--border); }
-.projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
-.project-card { background: var(--bg); padding: 2.5rem; display: flex; flex-direction: column; gap: 1rem; text-decoration: none; color: inherit; transition: background 0.2s; }
-.project-card:hover { background: var(--bg3); }
-.project-card:hover .project-arrow { transform: translate(3px, -3px); }
-.project-top { display: flex; justify-content: space-between; align-items: flex-start; }
-.project-num { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.1em; }
-.project-arrow { color: var(--text-muted); transition: transform 0.2s; }
-.project-badge { font-family: var(--font-mono); font-size: 0.6rem; color: var(--bg); background: var(--accent); padding: 0.2rem 0.5rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.project-name { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
-.project-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; flex: 1; }
-.project-stack { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: auto; }
-.project-tech { font-family: var(--font-mono); font-size: 0.63rem; color: var(--accent2); padding: 0.2rem 0.5rem; border: 1px solid rgba(196,168,130,0.2); text-transform: uppercase; letter-spacing: 0.06em; }
-.project-featured { grid-column: 1 / -1; }
-
-/* Experience */
-.experience { background: var(--bg2); border-top: 1px solid var(--border); }
-.exp-item { display: grid; grid-template-columns: 160px 1fr; gap: 3rem; padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
-.exp-item:first-of-type { border-top: 1px solid var(--border); }
-.exp-date { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.06em; padding-top: 0.3rem; }
-.exp-role { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
-.exp-company { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent2); letter-spacing: 0.06em; margin-bottom: 0.75rem; }
-.exp-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.8; }
-
-/* Contact */
-.contact { border-top: 1px solid var(--border); }
-.contact-title { font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin-bottom: 1.5rem; }
-.contact-title span { color: var(--accent); }
-.contact-text { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2.5rem; max-width: 380px; }
-.contact-links { display: flex; flex-wrap: wrap; gap: 1rem; }
-.contact-link { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1.25rem; border: 1px solid var(--border); color: var(--text-secondary); text-decoration: none; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.2s; }
-.contact-link:hover { border-color: var(--accent); color: var(--accent); background: rgba(232,213,176,0.04); }
-
-/* Footer */
-footer { border-top: 1px solid var(--border); padding: 2rem 3rem; display: flex; justify-content: space-between; align-items: center; }
-footer p { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); }
-.status-dot { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); }
-.status-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s ease infinite; }
-
-/* Reveal */
-.reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.7s ease, transform 0.7s ease; }
-.reveal.visible { opacity: 1; transform: none; }
-
-@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-@media (max-width: 860px) {
-  .hero { flex-direction: column-reverse; align-items: flex-start; padding: 6rem 1.5rem 3rem; gap: 2rem; }
-  .hero-photo-wrap { width: 100%; height: 260px; }
-  section { padding: 4rem 1.5rem; }
-  nav { padding: 1rem 1.5rem; }
-  .nav-links { display: none; }
-  .about-grid { grid-template-columns: 1fr; gap: 3rem; }
-  .exp-item { grid-template-columns: 1fr; gap: 0.5rem; }
-  .project-featured { grid-column: 1; }
-  footer { flex-direction: column; gap: 1rem; }
-}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.door,.door .info,.portal{transition:none}}
 </style>
 </head>
 <body>
+<div class="wrap">
+  <header class="top">
+    <div class="me"><img src="assets/img/omar.jpg" alt="" width="640" height="660"><div>Omar Tamer<small>Software engineer · Cairo</small></div></div>
+    <a class="skip" href="pro/index.html"><span class="long">In a hurry? Skip to the résumé view</span><span class="short">Résumé view</span> →</a>
+  </header>
 
-<nav id="nav">
-  <a href="#" class="nav-logo">OT</a>
-  <ul class="nav-links">
-    <li><a href="#about">About</a></li>
-    <li><a href="#skills">Skills</a></li>
-    <li><a href="#projects">Projects</a></li>
-    <li><a href="#experience">Experience</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ul>
-</nav>
-
-<section class="hero" id="home">
-  <div class="hero-left">
-    <div class="hero-counter">001 — Portfolio</div>
-    <h1 class="hero-title">Omar<br><span class="accent">Tamer</span></h1>
-    <p class="hero-subtitle">Computer Science &amp; Engineering · GUC '26</p>
-    <p class="hero-desc">Computer Engineering graduate from the German University in Cairo. I build things across the stack — web apps, AI systems, databases, and 3D graphics.</p>
-    <div class="hero-tags">
-      <span class="hero-tag">Cairo, Egypt</span>
-      <span class="hero-tag">Available for work</span>
-    </div>
-    <a href="#projects" class="hero-cta">View work <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
-  </div>
-  <div class="hero-photo-wrap">
-    <img src="omar-tamer.jpg" alt="Omar Tamer">
-  </div>
-</section>
-
-<section class="about" id="about">
-  <div class="section-label">002 — About</div>
-  <div class="about-grid">
+  <section class="intro">
+    <h1>One engineer.<span>Six ways in.</span></h1>
     <div>
-      <h2 class="about-title">Building real things<br>from <span>games to AI</span></h2>
-      <p class="about-text">Computer Engineering graduate from GUC with a strong foundation across the full stack — from backend APIs and distributed databases to AI pipelines and 3D graphics.</p>
-      <p class="about-text">My bachelor's thesis combined deep learning (AnimeGANv2), genetic algorithms, and facial landmark detection to build a cartoonization system — achieving 20%+ improvement in structural similarity through GA optimization.</p>
-      <p class="about-text">Outside of engineering, I'm a professional handball player who competed with Tersana Sporting Club and represented Egypt in international tournaments.</p>
+      <p class="lead">I'm Omar Tamer, a software engineer in Cairo. I built my portfolio six times, from the original to a playable game, each in a different style. Pick the one that fits you. You can switch anytime.</p>
+      <a class="welcome" id="welcome" href="#" hidden></a>
     </div>
-    <div class="reveal">
-      <div class="stat-row"><span class="stat-label">Education</span><span class="stat-value">GUC, Cairo</span></div>
-      <div class="stat-row"><span class="stat-label">Degree</span><span class="stat-value">B.Sc. CS &amp; Engineering</span></div>
-      <div class="stat-row"><span class="stat-label">Graduation</span><span class="stat-value">June 2026</span></div>
-      <div class="stat-row"><span class="stat-label">Languages</span><span class="stat-value">Arabic · English · French</span></div>
-      <div class="stat-row"><span class="stat-label">GitHub</span><span class="stat-value">omartamerr10</span></div>
-      <div class="stat-row"><span class="stat-label">Available for work</span><span class="stat-value">Now</span></div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<section class="skills" id="skills">
-  <div class="section-label">003 — Skills</div>
-  <div class="skills-grid reveal">
-    <div class="skill-group">
-      <div class="skill-group-title">Languages</div>
-      <div class="skill-tags">
-        <span class="skill-tag">Python</span><span class="skill-tag">Java</span><span class="skill-tag">JavaScript</span><span class="skill-tag">C#</span><span class="skill-tag">C++</span><span class="skill-tag">SQL</span>
-      </div>
-    </div>
-    <div class="skill-group">
-      <div class="skill-group-title">Frameworks</div>
-      <div class="skill-tags">
-        <span class="skill-tag">Flask</span><span class="skill-tag">Spring Boot</span><span class="skill-tag">React</span><span class="skill-tag">Node.js</span><span class="skill-tag">PyTorch</span><span class="skill-tag">OpenGL</span>
-      </div>
-    </div>
-    <div class="skill-group">
-      <div class="skill-group-title">Databases</div>
-      <div class="skill-tags">
-        <span class="skill-tag">PostgreSQL</span><span class="skill-tag">MongoDB</span><span class="skill-tag">Redis</span><span class="skill-tag">Cassandra</span><span class="skill-tag">Neo4j</span><span class="skill-tag">Elasticsearch</span>
-      </div>
-    </div>
-    <div class="skill-group">
-      <div class="skill-group-title">Tools</div>
-      <div class="skill-tags">
-        <span class="skill-tag">Docker</span><span class="skill-tag">Git</span><span class="skill-tag">Oracle</span><span class="skill-tag">Blender</span><span class="skill-tag">Maya</span><span class="skill-tag">FAISS</span>
-      </div>
-    </div>
+  <div class="choose" role="group" aria-label="Help me choose">
+    <span>Help me choose:</span>
+    <button type="button" data-pick="pro">I have 30 seconds</button>
+    <button type="button" data-pick="cinematic">Show me something stunning</button>
+    <button type="button" data-pick="os">I'm a developer</button>
+    <button type="button" data-pick="arcade">I'd rather play</button>
+    <button type="button" data-pick="board">I like to explore</button>
+    <button type="button" data-pick="og">Show me the original</button>
   </div>
-</section>
 
-<section class="projects" id="projects">
-  <div class="section-label">004 — Projects</div>
-  <div class="projects-grid">
-    <a class="project-card project-featured" href="https://github.com/omartamerr10/Cartoonizing-Images" target="_blank">
-      <div class="project-top"><span class="project-num">01</span><span class="project-badge">Thesis</span></div>
-      <div class="project-name">Cartoonizing Images with Genetic Algorithms</div>
-      <p class="project-desc">Bachelor's thesis — an end-to-end pipeline transforming portraits into anime-style cartoons using AnimeGANv2, a genetic algorithm optimizer (PyGAD), and MediaPipe 468-point facial landmark detection. Achieved 20%+ SSIM improvement over baseline.</p>
-      <div class="project-stack"><span class="project-tech">Python</span><span class="project-tech">PyTorch</span><span class="project-tech">Flask</span><span class="project-tech">React</span><span class="project-tech">MediaPipe</span></div>
-    </a>
-    <a class="project-card" href="https://github.com/omartamerr10/hotel-travel-assistant" target="_blank">
-      <div class="project-top"><span class="project-num">02</span><span class="project-arrow">↗</span></div>
-      <div class="project-name">Hotel Travel Assistant</div>
-      <p class="project-desc">AI-powered travel chatbot with LLM intent classification via Groq, semantic search using FAISS and sentence transformers, and graph-based hotel queries via Neo4j.</p>
-      <div class="project-stack"><span class="project-tech">Python</span><span class="project-tech">Groq LLM</span><span class="project-tech">FAISS</span><span class="project-tech">Neo4j</span><span class="project-tech">Streamlit</span></div>
-    </a>
-    <a class="project-card" href="https://github.com/omartamerr10/ducksplorer-travel-planner" target="_blank">
-      <div class="project-top"><span class="project-num">03</span><span class="project-arrow">↗</span></div>
-      <div class="project-name">Ducksplorer</div>
-      <p class="project-desc">Full-stack MERN travel planning app with real-time hotel and activity booking, budget tracking, and notifications.</p>
-      <div class="project-stack"><span class="project-tech">MongoDB</span><span class="project-tech">Express</span><span class="project-tech">React</span><span class="project-tech">Node.js</span></div>
-    </a>
-    <a class="project-card" href="https://github.com/omartamerr10/last-of-us-legacy" target="_blank">
-      <div class="project-top"><span class="project-num">04</span><span class="project-arrow">↗</span></div>
-      <div class="project-name">The Last of Us: Legacy</div>
-      <p class="project-desc">Turn-based survival game in Java. Navigate a zombie-infested grid as Explorer, Fighter, or Medic — manage action points, vaccines, and armor to survive.</p>
-      <div class="project-stack"><span class="project-tech">Java</span><span class="project-tech">OOP</span></div>
-    </a>
-    <a class="project-card" href="https://github.com/omartamerr10/3d-maze-runner-opengl" target="_blank">
-      <div class="project-top"><span class="project-num">05</span><span class="project-arrow">↗</span></div>
-      <div class="project-name">3D Maze Runner</div>
-      <p class="project-desc">Real-time 3D maze game in C++ with OpenGL. Features lighting, material rendering, and 3D model loading.</p>
-      <div class="project-stack"><span class="project-tech">C++</span><span class="project-tech">OpenGL</span><span class="project-tech">GLUT</span></div>
-    </a>
-    <a class="project-card" href="https://github.com/omartamerr10/joal-charity-platform" target="_blank">
-      <div class="project-top"><span class="project-num">06</span><span class="project-arrow">↗</span></div>
-      <div class="project-name">JOAL Charity Platform</div>
-      <p class="project-desc">React-based web platform connecting NGOs and donors for the exchange of goods and charitable contributions.</p>
-      <div class="project-stack"><span class="project-tech">React</span><span class="project-tech">JavaScript</span></div>
-    </a>
+  <div class="deck" id="deck">
+    <article class="door d-pro" data-v="pro" tabindex="0" aria-label="Professional view">
+      <div class="scene sc-pro" aria-hidden="true"><div class="face"><img src="assets/img/omar.jpg" alt=""></div><div class="bar h"></div><div class="bar" style="width:52%"></div><div class="bar" style="width:46%;animation-delay:.1s"></div><div class="bar a" style="animation-delay:.2s"></div><div class="row"><div class="tile"></div><div class="tile"></div></div></div>
+      <div class="rail" aria-hidden="true"><b>Professional</b><i></i></div>
+      <span class="key" aria-hidden="true">1</span>
+      <div class="info"><p class="kind">Clean and quick</p><h2>Professional</h2><p class="tagline">A calm, readable one-pager with smooth transitions. Everything a recruiter needs in under a minute: work, experience, skills, résumé.</p><ul class="facts"><li>Best for recruiters</li><li>1 minute</li><li>Any device</li><li>Light and dark</li></ul><a class="enter" href="pro/index.html">Enter Professional <span class="arr" aria-hidden="true">→</span></a></div>
+    </article>
+    <article class="door d-cin" data-v="cinematic" tabindex="0" aria-label="Cinematic 3D view">
+      <canvas class="scene sc-canvas" data-scene="particles" aria-hidden="true"></canvas>
+      <div class="rail" aria-hidden="true"><b>Cinematic 3D</b><i></i></div>
+      <span class="key" aria-hidden="true">2</span>
+      <div class="info"><p class="kind">The showpiece</p><h2>Cinematic 3D</h2><p class="tagline">Fourteen thousand particles redraw my face, my projects and a handball court as you scroll. Every project opens as a playable app.</p><ul class="facts"><li>Best on a laptop</li><li>3 minutes</li><li>WebGL</li><li>Sound off, cursor on</li></ul><a class="enter" href="cinematic/index.html">Enter Cinematic 3D <span class="arr" aria-hidden="true">→</span></a></div>
+    </article>
+    <article class="door d-os" data-v="os" tabindex="0" aria-label="OmarOS view">
+      <div class="scene sc-os" aria-hidden="true"><div class="w w1"></div><div class="w w2"><p>omar@cairo ~ $ sudo hire omar</p></div><div class="w w3"></div><div class="dock"><i style="--k:#cdb48a"></i><i style="--k:#1f5bb5"></i><i style="--k:#0d1117"></i><i style="--k:#c46b4a"></i><i style="--k:#2fc7a7"></i><i style="--k:#f2c14e"></i></div></div>
+      <div class="rail" aria-hidden="true"><b>OmarOS</b><i></i></div>
+      <span class="key" aria-hidden="true">3</span>
+      <div class="info"><p class="kind">For developers</p><h2>OmarOS</h2><p class="tagline">My portfolio as a working desktop: drag windows, use a real terminal, walk through a maze, chat with my hotel bot, run a genetic algorithm.</p><ul class="facts"><li>Best for engineers</li><li>5 minutes</li><li>Keyboard friendly</li><li>Try sudo hire omar</li></ul><a class="enter" href="os/index.html">Boot OmarOS <span class="arr" aria-hidden="true">→</span></a></div>
+    </article>
+    <article class="door d-board" data-v="board" tabindex="0" aria-label="The Board view">
+      <div class="scene sc-board" aria-hidden="true"><svg viewBox="0 0 600 600" preserveAspectRatio="none"><path d="M150 170 Q260 260 330 210"/><path d="M330 210 Q420 330 420 400"/><path d="M150 170 Q120 330 200 420"/></svg><div class="n" style="left:12%;top:18%;width:30%;height:16%"></div><div class="n y" style="left:50%;top:26%;width:22%;height:18%;animation-delay:1s"></div><div class="n" style="left:56%;top:58%;width:30%;height:20%;animation-delay:2s"></div><div class="n g" style="left:18%;top:62%;width:22%;height:16%;animation-delay:3s"></div></div>
+      <div class="rail" aria-hidden="true"><b>The Board</b><i></i></div>
+      <span class="key" aria-hidden="true">4</span>
+      <div class="info"><p class="kind">For explorers</p><h2>The Board</h2><p class="tagline">Everything pinned to an infinite board. Pan, zoom, throw the cards around and follow the strings, or sit back and take the guided tour.</p><ul class="facts"><li>Best with a trackpad</li><li>3 minutes</li><li>Pinch to zoom</li><li>Guided tour</li></ul><a class="enter" href="board/index.html">Open The Board <span class="arr" aria-hidden="true">→</span></a></div>
+    </article>
+    <article class="door d-arc" data-v="arcade" tabindex="0" aria-label="Omar's Quest view">
+      <canvas class="scene sc-canvas" data-scene="arcade" aria-hidden="true"></canvas>
+      <div class="rail" aria-hidden="true"><b>Omar's Quest</b><i></i></div>
+      <span class="key" aria-hidden="true">5</span>
+      <div class="info"><p class="kind">For players</p><h2>OMAR'S QUEST</h2><p class="tagline">Run through my story from Cairo to the finish flag. Hit the glowing blocks to find projects, collect skills as coins, stomp a few bugs.</p><ul class="facts"><li>Best for fun</li><li>4 minutes</li><li>Keyboard or touch</li><li>8-bit</li></ul><a class="enter" href="arcade/index.html">Press start <span class="arr" aria-hidden="true">→</span></a></div>
+    </article>
+    <article class="door d-og" data-v="og" tabindex="0" aria-label="The OG view">
+      <div class="scene sc-og" aria-hidden="true"><div class="og-txt"><small>001 — Portfolio</small><b>Omar</b><b class="t">Tamer</b><i></i><i style="width:46%"></i><span>View work ↗</span></div><div class="og-ph"><img src="assets/img/omar.jpg" alt=""></div></div>
+      <div class="rail" aria-hidden="true"><b>The OG</b><i></i></div>
+      <span class="key" aria-hidden="true">6</span>
+      <div class="info"><p class="kind">Where it started</p><h2>The OG</h2><p class="tagline">My original portfolio, kept exactly as it was. Dark, minimal and to the point, the one that started all of this.</p><ul class="facts"><li>The original</li><li>2 minutes</li><li>Any device</li><li>Classic</li></ul><a class="enter" href="og/index.html">Open the OG <span class="arr" aria-hidden="true">→</span></a></div>
+    </article>
   </div>
-</section>
 
-<section class="experience" id="experience">
-  <div class="section-label">005 — Experience</div>
-  <div class="exp-item reveal">
-    <div class="exp-date">Apr 2025 — Sep 2025</div>
-    <div>
-      <div class="exp-role">Junior Software Developer</div>
-      <div class="exp-company">I-Axiom Cloud ERP</div>
-      <p class="exp-desc">Contributed to development and customization of ERP modules for clients. Integrated frontend dashboards with backend workflows using C#, JavaScript, HTML, and Oracle DB. Participated in sprint planning, testing, and deployment cycles.</p>
-    </div>
-  </div>
-  <div class="exp-item reveal">
-    <div class="exp-date">Summer 2024</div>
-    <div>
-      <div class="exp-role">Intern</div>
-      <div class="exp-company">BSH Home Appliances Egypt</div>
-      <p class="exp-desc">Completed Pathfinder training with exposure to IT, marketing, logistics, HR, and consumer operations. Explored IT infrastructure in factory settings.</p>
-    </div>
-  </div>
-  <div class="exp-item reveal">
-    <div class="exp-date">2013 — Present</div>
-    <div>
-      <div class="exp-role">Professional Handball Player</div>
-      <div class="exp-company">Tersana SC · Heliopolis SC · Police Union · Arab Contractors</div>
-      <p class="exp-desc">Right winger competing in the Egyptian premier handball league. Represented Egypt at the Partille Cup (Sweden) and won silver at the Egyptian Universities Championship.</p>
-    </div>
-  </div>
-</section>
-
-<section class="contact" id="contact">
-  <div class="section-label">006 — Contact</div>
-  <div class="reveal">
-    <h2 class="contact-title">Let's<br><span>connect</span></h2>
-    <p class="contact-text">Open to opportunities, collaborations, and interesting conversations. Available for work now.</p>
-    <div class="contact-links">
-      <a href="mailto:omartamer3a@gmail.com" class="contact-link">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>Email
-      </a>
-      <a href="https://linkedin.com/in/omar-tamer-farouk" target="_blank" class="contact-link">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn
-      </a>
-      <a href="https://github.com/omartamerr10" target="_blank" class="contact-link">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>GitHub
-      </a>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <p>© 2026 Omar Tamer — Cairo, Egypt</p>
-  <span class="status-dot">Available for work</span>
-</footer>
+  <footer class="how"><span><b>Every view has a Switch view button</b> in a corner, so you can jump between them anytime.</span><span>Or just email me: <a href="mailto:omartamer1009@gmail.com">omartamer1009@gmail.com</a></span></footer>
+</div>
 
 <script>
-const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50));
-const reveals = document.querySelectorAll('.reveal');
-const obs = new IntersectionObserver(entries => {
-  entries.forEach((e, i) => { if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), i * 100); obs.unobserve(e.target); } });
-}, { threshold: 0.1 });
-reveals.forEach(el => obs.observe(el));
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const deck = document.getElementById('deck'), doors = [...deck.querySelectorAll('.door')];
+  const NAMES = { pro:'Professional', cinematic:'Cinematic 3D', os:'OmarOS', board:'The Board', arcade:"Omar's Quest", og:'The OG' };
+  const HREF = { pro:'pro/index.html', cinematic:'cinematic/index.html', os:'os/index.html', board:'board/index.html', arcade:'arcade/index.html', og:'og/index.html' };
+  let saved = null; try { saved = localStorage.getItem('omar-view'); } catch {}
+
+  const openDoor = (d) => { doors.forEach(x => x.toggleAttribute('data-open', x === d)); doors.forEach(x => x.setAttribute('aria-expanded', String(x === d))); };
+  doors.forEach(d => {
+    d.addEventListener('mouseenter', () => { if (matchMedia('(hover:hover)').matches) openDoor(d); });
+    d.addEventListener('focus', () => openDoor(d));
+    d.addEventListener('click', e => { if (!d.hasAttribute('data-open')) { e.preventDefault(); openDoor(d); } });
+    d.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target === d) go(d.dataset.v); });
+  });
+  openDoor(doors.find(d => d.dataset.v === saved) || doors[1]);
+
+  // help me choose
+  document.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-pick]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    const d = doors.find(x => x.dataset.v === b.dataset.pick); openDoor(d); d.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block:'nearest' });
+    d.animate([{ boxShadow:'0 0 0 0 rgba(232,201,143,.0)' }, { boxShadow:'0 0 0 6px rgba(232,201,143,.6)' }, { boxShadow:'0 0 0 0 rgba(232,201,143,0)' }], { duration:900 });
+  }));
+  // welcome back
+  const wb = document.getElementById('welcome');
+  if (saved && NAMES[saved]) { wb.hidden = false; wb.href = HREF[saved]; wb.textContent = `Welcome back. Continue in ${NAMES[saved]} →`; wb.addEventListener('click', e => { e.preventDefault(); go(saved); }); }
+
+  // keys 1 to 5 open a door, Enter walks through it
+  addEventListener('keydown', e => { if (e.target.closest('input,textarea')) return; const n = +e.key; if (n >= 1 && n <= doors.length) { openDoor(doors[n-1]); doors[n-1].focus({ preventScroll:true }); }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const i = doors.findIndex(d => d.hasAttribute('data-open')); const j = (i + (e.key === 'ArrowRight' ? 1 : -1) + doors.length) % doors.length; openDoor(doors[j]); doors[j].focus({ preventScroll:true }); } });
+
+  // walking through a door: it grows to fill the screen in its own colours
+  function go(v){
+    const d = doors.find(x => x.dataset.v === v), href = HREF[v];
+    if (reduce || !d) { location.href = href; return; }
+    const r = d.getBoundingClientRect(), cs = getComputedStyle(d);
+    const p = document.createElement('div'); p.className = 'portal'; p.style.background = cs.getPropertyValue('--c-bg'); p.style.color = cs.getPropertyValue('--c-ink');
+    Object.assign(p.style, { left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px' }); p.innerHTML = `<span>${NAMES[v]}</span>`; document.body.appendChild(p);
+    requestAnimationFrame(() => requestAnimationFrame(() => { Object.assign(p.style, { left:'0px', top:'0px', width:innerWidth+'px', height:innerHeight+'px', borderRadius:'0px' }); p.classList.add('full'); }));
+    try { localStorage.setItem('omar-view', v); } catch {}
+    setTimeout(() => location.href = href, 820);
+  }
+  document.querySelectorAll('.enter').forEach(a => a.addEventListener('click', e => { e.preventDefault(); go(a.closest('.door').dataset.v); }));
+  document.querySelector('.top .skip').addEventListener('click', e => { e.preventDefault(); go('pro'); });
+  addEventListener('pageshow', () => document.querySelectorAll('.portal').forEach(p => p.remove()));
+
+  /* mini scenes drawn on canvas */
+  const scenes = [...document.querySelectorAll('canvas[data-scene]')].map(c => ({ c, g:c.getContext('2d'), kind:c.dataset.scene }));
+  const fit = () => scenes.forEach(s => { const r = s.c.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); s.c.width = Math.max(1, r.width*d); s.c.height = Math.max(1, r.height*d); s.d = d; });
+  fit(); addEventListener('resize', fit); new ResizeObserver(fit).observe(deck);
+  const PTS = Array.from({ length:900 }, () => { const th = Math.random()*Math.PI*2, ph = Math.acos(Math.random()*2-1); return { th, ph, seam: Math.abs(Math.sin(th*3)*Math.sin(ph*2)) < .07 }; });
+  let t = 0, last = performance.now();
+  function particles(s){ const { g, c } = s, W = c.width, H = c.height, R = Math.min(W, H)*.3, cx = W*.5, cy = H*.38;
+    g.fillStyle = '#05070c'; g.fillRect(0, 0, W, H); const rot = t*.35;
+    for (const p of PTS){ const x = Math.sin(p.ph)*Math.cos(p.th + rot), y = Math.cos(p.ph), z = Math.sin(p.ph)*Math.sin(p.th + rot); const k = (z + 1.6)/2.6, br = .35 + .65*k;
+      g.fillStyle = p.seam ? `rgba(232,201,143,${br})` : `rgba(141,183,255,${br*.85})`; const sz = (1 + k*1.6)*s.d; g.fillRect(cx + x*R, cy + y*R, sz, sz); } }
+  function arcade(s){ const { g, c } = s, W = c.width, H = c.height, u = H/120;
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#0f1a35'); gr.addColorStop(.6, '#2d3f6e'); gr.addColorStop(.85, '#c9825a'); gr.addColorStop(1, '#f0c27a'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    const off = (t*60*u) % (W*.8); g.fillStyle = '#b77b4f'; for (let i = -1; i < 3; i++){ const bx = i*W*.8 - off*.25; g.beginPath(); g.moveTo(bx + W*.1, H*.72); g.lineTo(bx + W*.3, H*.42); g.lineTo(bx + W*.5, H*.72); g.fill(); }
+    g.fillStyle = '#1d2a4d'; for (let i = -1; i < 12; i++){ const bx = i*28*u - (off*.6 % (28*u)); const h = (12 + ((i*7) % 5)*5)*u; g.fillRect(bx, H*.72 - h, 20*u, h); }
+    const gy = H*.78; g.fillStyle = '#d9a55c'; g.fillRect(0, gy, W, H - gy); g.fillStyle = '#efc27f'; g.fillRect(0, gy, W, 3*u);
+    // blocks and a bug moving toward the runner
+    const bx = W - ((t*70*u) % (W + 60*u)); g.fillStyle = '#ffcc4d'; g.fillRect(bx, gy - 40*u, 12*u, 12*u); g.fillStyle = '#7a3d07'; g.font = `${8*u}px "Press Start 2P"`; g.fillText('?', bx + 2.5*u, gy - 30.5*u);
+    const bugX = W - (((t*70*u) + W*.5) % (W + 60*u)); g.fillStyle = '#4ade80'; g.fillRect(bugX, gy - 7*u, 12*u, 7*u);
+    // runner: jumps when the bug comes close
+    const px = W*.3, near = Math.abs(bugX - px) < 26*u; const jy = near ? Math.sin(Math.min(1, (26*u - Math.abs(bugX - px))/(26*u))*Math.PI)*22*u : 0; const leg = Math.sin(t*14)*2*u;
+    g.fillStyle = '#1e2a44'; g.fillRect(px - 3*u, gy - 6*u - jy, 2.5*u, 6*u + (near ? 0 : leg)); g.fillRect(px + 1*u, gy - 6*u - jy, 2.5*u, 6*u - (near ? 0 : leg)); g.fillStyle = '#245fa8'; g.fillRect(px - 4*u, gy - 12*u - jy, 8*u, 7*u); g.fillStyle = '#c48a62'; g.fillRect(px - 3*u, gy - 18*u - jy, 6*u, 6*u); g.fillStyle = '#1a1310'; g.fillRect(px - 3.5*u, gy - 19.5*u - jy, 7*u, 2.5*u);
+    g.fillStyle = '#fff8ec'; g.font = `${7*u}px "Press Start 2P"`; g.fillText('OMAR\'S QUEST', 8*u, 16*u); }
+  const loop = now => { const dt = Math.min(.05, (now - last)/1000); last = now; t += reduce ? 0 : dt; scenes.forEach(s => { if (s.c.width < 2) return; s.kind === 'particles' ? particles(s) : arcade(s); }); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+})();
 </script>
 </body>
 </html>

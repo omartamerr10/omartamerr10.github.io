@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Board · Omar Tamer</title>
+<meta name="description" content="Omar Tamer's work pinned to an infinite board. Pan, zoom, drag the cards, follow the strings.">
+<style>
+@font-face{font-family:"Bricolage Grotesque";font-weight:600;font-display:swap;src:url(../assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../assets/fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:400;font-display:swap;src:url(../assets/fonts/inter-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:500;font-display:swap;src:url(../assets/fonts/inter-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:600;font-display:swap;src:url(../assets/fonts/inter-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Plex Arabic";font-weight:600;font-display:swap;src:url(../assets/fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2) format("woff2");unicode-range:U+0600-06FF,U+FE70-FEFF}
+
+/* Layout: an infinite studio board. Warm paper with a dot grid, white cards, orange string between related things. One deliberate light look. */
+:root{
+  --paper:#f4f1ea; --dot:#d9d2c3; --card:#ffffff; --ink:#1b1a17; --muted:#5b574f; --faint:#8a8477; --line:#e7e1d4;
+  --orange:#e8853a; --orange-soft:#fde9d6; --blue:#1f5bb5; --sticky:#ffe58a; --sticky-2:#c9f0d9; --sticky-3:#d9e6ff;
+  --display:"Bricolage Grotesque","Inter",system-ui,sans-serif; --text:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1); color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font:400 15px/1.55 var(--text);-webkit-font-smoothing:antialiased;touch-action:none}
+h1,h2,h3,p,ul{margin:0}
+ul{padding:0;list-style:none}
+img{display:block;max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:6px}
+#vp{position:fixed;inset:0;cursor:grab;background-image:radial-gradient(var(--dot) 1.3px,transparent 1.4px);background-size:var(--g,28px) var(--g,28px);background-position:var(--gx,0) var(--gy,0)}
+#vp.panning{cursor:grabbing}
+.world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+svg.strings{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
+svg.strings path{fill:none;stroke:var(--orange);stroke-width:2.2;stroke-dasharray:6 7;opacity:.75}
+svg.strings text{font:600 13px/1 var(--text);fill:var(--orange)}
+.card{position:absolute;background:var(--card);border-radius:18px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 12px 34px -16px rgba(60,45,20,.35),0 0 0 1px rgba(60,45,20,.06);padding:20px;cursor:grab;user-select:none;transform-origin:50% 0;transition:box-shadow .25s,transform .25s var(--ease),opacity .5s var(--ease);touch-action:none}
+.card.drag{cursor:grabbing;box-shadow:0 30px 60px -20px rgba(60,45,20,.45),0 0 0 1px rgba(60,45,20,.08);transition:box-shadow .25s}
+.card.pop{opacity:0;transform:scale(.6) rotate(-6deg)}
+.card .pin{position:absolute;top:-8px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--orange);box-shadow:0 3px 6px rgba(0,0,0,.25),inset -2px -3px 0 rgba(0,0,0,.15)}
+.card h2{font:700 24px/1.15 var(--display);letter-spacing:-.02em}
+.card h3{font:600 19px/1.25 var(--display);letter-spacing:-.01em}
+.card p{color:var(--muted);margin-top:8px}
+.card .kind{font:600 12px/1 var(--text);color:var(--orange);letter-spacing:.06em;text-transform:uppercase}
+.card .im{margin:-20px -20px 16px;aspect-ratio:16/9;overflow:hidden;border-radius:18px 18px 0 0;background:#ede6da}
+.card .im img,.card .im svg{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chips li{padding:4px 10px;border-radius:999px;background:var(--orange-soft);color:#8a4310;font:500 12.5px/1.3 var(--text)}
+.go{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-weight:600;font-size:14px;color:var(--blue);text-decoration:none}
+.go:hover{text-decoration:underline;text-underline-offset:3px}
+.hello{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:center;padding:24px}
+.hello .ph{width:150px;height:150px;border-radius:50%;background:#ede6da;overflow:hidden;position:relative}
+.hello .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 8%;transform:scale(1.3) translateY(10%);pointer-events:none}
+.hello h1{font:700 44px/1 var(--display);letter-spacing:-.03em}
+.hello .ar{font:600 20px/1.4 "Plex Arabic",sans-serif;color:var(--faint);margin-top:4px}
+.hello .role{font-weight:600;margin-top:8px}
+.sticky{border-radius:4px;padding:20px 20px 24px;box-shadow:0 14px 26px -14px rgba(60,45,20,.45)}
+.sticky.y{background:var(--sticky)}.sticky.g{background:var(--sticky-2)}.sticky.b{background:var(--sticky-3)}
+.sticky h3{font:700 20px/1.2 var(--display)}
+.sticky p{color:#3f3a2f}
+.tl{display:grid;gap:14px;margin-top:12px}
+.tl li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:12px}
+.tl small{font:600 12.5px/1.6 var(--text);color:var(--orange)}
+.tl b{display:block}
+.tl span{color:var(--muted);font-size:14px}
+.note{position:absolute;font:600 18px/1.2 var(--display);color:var(--orange);pointer-events:none;white-space:nowrap}
+.mail{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.mail code{padding:10px 12px;border-radius:10px;background:#f4f1ea;font:500 14.5px/1 var(--text);user-select:all}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;transition:background-color .2s,transform .15s}
+.btn:active{transform:scale(.96)}
+.btn-o{background:var(--orange);color:#fff}
+.btn-o:hover{background:#cf6e24}
+.btn-l{background:#f4f1ea}
+.btn-l:hover{background:#ebe5d8}
+
+/* chrome */
+.title{position:fixed;left:max(16px,env(safe-area-inset-left,0px));top:max(16px,env(safe-area-inset-top,0px));z-index:10;display:flex;align-items:center;gap:12px;padding:8px 14px 8px 8px;border-radius:14px;background:rgba(255,255,255,.92);box-shadow:0 8px 24px -12px rgba(60,45,20,.4),0 0 0 1px rgba(60,45,20,.06);font:600 14px/1.2 var(--text)}
+.title i{width:28px;height:28px;border-radius:8px;background:var(--orange);display:grid;place-items:center;color:#fff;font:700 14px/1 var(--display);font-style:normal}
+.title small{display:block;color:var(--faint);font-weight:500;font-size:12px}
+.tools{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:4px;padding:6px;border-radius:16px;background:rgba(255,255,255,.95);box-shadow:0 14px 34px -14px rgba(60,45,20,.45),0 0 0 1px rgba(60,45,20,.06)}
+.tools button{white-space:nowrap;height:38px;min-width:38px;padding:0 12px;border-radius:10px;font-weight:600;font-size:14px;color:var(--ink);transition:background-color .15s}
+.tools button:hover{background:#f4f1ea}
+.tools .z{min-width:58px;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
+.tools .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.tools .tour{background:var(--ink);color:#fff}
+.tools .tour:hover{background:#3a3730}
+.mini{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:10;width:190px;height:128px;border-radius:14px;background:rgba(255,255,255,.95);box-shadow:0 14px 34px -14px rgba(60,45,20,.45),0 0 0 1px rgba(60,45,20,.06);cursor:pointer}
+.hint{position:fixed;left:50%;top:max(16px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:10;padding:9px 16px;border-radius:999px;background:var(--ink);color:#fff;font-size:13.5px;transition:opacity .6s,transform .6s var(--ease)}
+.hint .short{display:none}
+.hint.gone{opacity:0;transform:translate(-50%,-10px);pointer-events:none}
+.caption{position:fixed;left:50%;bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 66px);transform:translate(-50%,10px);z-index:10;width:min(520px,calc(100% - 32px));padding:14px 18px;border-radius:16px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:opacity .4s,transform .5s var(--ease)}
+.caption.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.caption p{flex:1;font-size:14.5px}
+.caption b{display:block;font:600 12px/1 var(--text);color:#f6b781;margin-bottom:5px;letter-spacing:.06em}
+.caption button{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.12);color:#fff;font-size:16px}
+.caption button:hover{background:rgba(255,255,255,.22)}
+.list-link{position:fixed;left:-9999px}
+.list-link:focus{left:16px;top:70px;z-index:20;background:#fff;padding:10px 14px;border-radius:10px}
+@media (max-width:760px){
+  .mini{display:none}
+  .tools .z,.tools .sep.s2,.tools .reset{display:none}
+  .title small{display:none}
+  .hint{top:auto;bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 62px);white-space:nowrap;font-size:12.5px}
+  .hint .long{display:none}.hint .short{display:inline}
+  .tools{gap:2px}
+  .tools button{padding:0 10px}
+}
+@media (prefers-reduced-motion:reduce){.card{transition:none}.card.pop{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<a class="list-link" href="#plain">Skip the board and read everything as a list</a>
+<div class="title"><i>OT</i><div>The Board<small>Omar Tamer's work, pinned up</small></div></div>
+<p class="hint" id="hint"><span class="long">Drag to pan · scroll or pinch to zoom · drag cards around · double-click to focus</span><span class="short">Drag to pan · pinch to zoom · move the cards</span></p>
+<div id="vp" aria-label="Interactive board of Omar Tamer's work">
+  <div class="world" id="world">
+    <svg class="strings" id="strings" aria-hidden="true"></svg>
+  </div>
+</div>
+<div class="tools" role="toolbar" aria-label="Board controls">
+  <button type="button" id="zOut" aria-label="Zoom out">−</button><button type="button" class="z" id="zLbl" aria-label="Reset zoom to 100%">100%</button><button type="button" id="zIn" aria-label="Zoom in">+</button>
+  <span class="sep" aria-hidden="true"></span><button type="button" id="fit">Fit all</button><button type="button" class="reset" id="reset">Tidy up</button><span class="sep s2" aria-hidden="true"></span><button type="button" class="tour" id="tour">▶ Take the tour</button>
+</div>
+<canvas class="mini" id="mini" width="380" height="256" aria-label="Minimap. Click to jump."></canvas>
+<div class="caption" id="cap" aria-live="polite"><button type="button" id="cPrev" aria-label="Previous stop">←</button><p id="cTxt"></p><button type="button" id="cNext" aria-label="Next stop">→</button></div>
+
+<section id="plain" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"><h1>Omar Tamer</h1><p>Software engineer in Cairo. All the board's content is also on the Professional view.</p><a href="../pro/index.html">Open the Professional view</a></section>
+
+<script>
+(() => {
+  const THESIS = `<svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice"><rect width="320" height="180" fill="#ede6da"/><g fill="none" stroke="#1b1a17" stroke-width="3"><ellipse cx="88" cy="90" rx="40" ry="50"/><path d="M68 80h12M96 80h12M80 110q8 8 16 0"/></g><g fill="#e8853a"><circle cx="70" cy="80" r="3"/><circle cx="106" cy="80" r="3"/><circle cx="88" cy="96" r="3"/><circle cx="76" cy="112" r="3"/><circle cx="100" cy="112" r="3"/><circle cx="88" cy="140" r="3"/><circle cx="52" cy="90" r="3"/><circle cx="124" cy="90" r="3"/></g><path d="M146 94h28" stroke="#1b1a17" stroke-width="3"/><path d="m168 86 8 8-8 8" fill="none" stroke="#1b1a17" stroke-width="3"/><g fill="none" stroke="#1b1a17" stroke-width="5" stroke-linecap="round"><ellipse cx="240" cy="90" rx="44" ry="54" fill="#fff"/><path d="M214 78q8-8 16 0M250 78q8-8 16 0M222 112q18 18 36 0"/></g></svg>`;
+  const COURT = `<svg viewBox="0 0 400 210" style="width:100%;height:auto;margin-top:12px" aria-hidden="true"><rect width="400" height="210" rx="8" fill="rgba(255,255,255,.55)"/><rect width="400" height="5" fill="#3f3a2f"/><rect x="178" width="44" height="12" rx="2" fill="#3f3a2f"/><path d="M80 5a120 120 0 0 0 240 0Z" fill="rgba(255,255,255,.7)" stroke="#3f3a2f" stroke-width="3"/><path d="M26 5a174 174 0 0 0 348 0" fill="none" stroke="#3f3a2f" stroke-width="3" stroke-dasharray="9 8"/><circle cx="356" cy="44" r="14" fill="#e8853a"/></svg>`;
+  // x, y in board units; w is the card width
+  const CARDS = [
+    { id:'hello', x:0, y:0, w:560, cls:'hello', html:`<div class="ph"><img src="../assets/img/omar-cutout.webp" alt="Portrait of Omar Tamer"></div><div><h1>Omar Tamer</h1><p class="ar" lang="ar" dir="rtl" style="text-align:left">عمر تامر</p><p class="role">Software engineer in Cairo</p><p>I build full-stack apps, AI systems and 3D games. GUC Computer Science and Engineering, class of 2026. Open to graduate and junior roles.</p></div>`, tour:'Start here. This is me, Omar, a software engineer in Cairo.' },
+    { id:'thesis', x:-760, y:-440, w:400, html:`<div class="im">${THESIS}</div><p class="kind">Bachelor's thesis · 2025</p><h3 style="margin-top:6px">Cartoonizing images with genetic algorithms</h3><p>AnimeGANv2 for style, 468 MediaPipe landmarks for exaggeration, and a genetic algorithm that tunes it all. +20% SSIM over the baseline, graded Excellent.</p><ul class="chips"><li>PyTorch</li><li>Flask</li><li>React</li><li>MediaPipe</li><li>PyGAD</li></ul><a class="go" href="https://github.com/omartamerr10/Cartoonizing-Images">Code on GitHub ↗</a>`, tour:'My thesis: a genetic algorithm tuning a deep-learning cartoonizer. Graded Excellent.' },
+    { id:'hotel', x:-240, y:-560, w:380, html:`<div class="im"><img src="../assets/img/hotel.jpg" alt="SHAP chart"></div><p class="kind">AI chatbot · 2024</p><h3 style="margin-top:6px">Hotel Travel Assistant</h3><p>Groq LLM for intent, FAISS for semantic search, Neo4j for graph questions. Explained with SHAP and LIME.</p><ul class="chips"><li>Python</li><li>FAISS</li><li>Neo4j</li></ul><a class="go" href="https://github.com/omartamerr10/hotel-travel-assistant">Code on GitHub ↗</a>`, tour:'An AI hotel assistant with three retrieval layers: LLM, vectors and a graph.' },
+    { id:'duck', x:720, y:-480, w:380, html:`<div class="im"><img src="../assets/img/ducksplorer.jpg" alt="Ducksplorer emblem"></div><p class="kind">Full-stack app · 2024</p><h3 style="margin-top:6px">Ducksplorer</h3><p>A MERN travel planner with real-time hotel and activity bookings, budgets and notifications.</p><ul class="chips"><li>MongoDB</li><li>Express</li><li>React</li><li>Node.js</li></ul><a class="go" href="https://github.com/omartamerr10/ducksplorer-travel-planner">Code on GitHub ↗</a>`, tour:'Ducksplorer, a full-stack travel planner built on MERN.' },
+    { id:'maze', x:860, y:120, w:360, html:`<div class="im"><img src="../assets/img/maze.jpg" alt="Brick texture from the game"></div><p class="kind">Game · 2024</p><h3 style="margin-top:6px">3D Maze Runner</h3><p>An infinite runner in C++ and OpenGL with real-time lighting, materials and 3D model loading.</p><ul class="chips"><li>C++</li><li>OpenGL</li><li>GLUT</li></ul><a class="go" href="https://github.com/omartamerr10/3d-maze-runner-opengl">Code on GitHub ↗</a>`, tour:'A 3D maze runner I wrote from scratch in C++ and OpenGL.' },
+    { id:'xp', x:-80, y:360, w:520, html:`<p class="kind">Experience</p><h2 style="margin-top:6px">Where I've worked</h2><ul class="tl"><li><small>Apr – Sep 2025</small><div><b>I-Axiom Cloud ERP</b><span>Junior Software Developer. ERP modules in C#, .NET and Oracle, Razor Pages dashboards with pagination and filtering.</span></div></li><li><small>Summer 2024</small><div><b>BSH Home Appliances Egypt</b><span>Pathfinder Intern across IT, marketing, logistics and HR.</span></div></li><li><small>2021 – 2026</small><div><b>German University in Cairo</b><span>B.Sc. Computer Science and Engineering. Very Good overall.</span></div></li></ul><a class="go" href="../assets/Omar-Tamer-CV.pdf" target="_blank" rel="noopener">Résumé (PDF) ↗</a>`, tour:'Experience: an ERP developer role and a rotation at BSH.' },
+    { id:'skills', x:-760, y:120, w:360, cls:'sticky b', html:`<h3>Toolbox</h3><p style="margin-top:8px"><b>Languages</b> Python, JavaScript, Java, C#, C++, SQL</p><p><b>Frameworks</b> React, Node, Express, Flask, Spring Boot, .NET</p><p><b>Data</b> PostgreSQL, Oracle, MongoDB, Redis, Cassandra, Neo4j, Elasticsearch</p><p><b>AI and 3D</b> PyTorch, FAISS, OpenGL, Docker, Git</p>`, tour:'My toolbox, from Python and React to Neo4j and OpenGL.' },
+    { id:'more', x:-760, y:500, w:360, html:`<p class="kind">Also built</p><ul class="tl"><li><small>2024</small><div><b>JavaXSQL</b><span>A database engine with SQL syntax and B+ tree indexes.</span></div></li><li><small>2023</small><div><b><a href="https://github.com/omartamerr10/last-of-us-legacy">The Last of Us: Legacy ↗</a></b><span>A turn-based survival game in Java.</span></div></li><li><small>2024</small><div><b><a href="https://github.com/omartamerr10/joal-charity-platform">JOAL ↗</a></b><span>A React platform for NGOs and donors.</span></div></li></ul>`, tour:'More: a database engine, a survival game and a charity platform.' },
+    { id:'ball', x:620, y:560, w:320, cls:'sticky y', html:`<h3>Off the keyboard</h3><p style="margin-top:6px">Right wing in Egypt's handball premier league since 2013. Partille Cup in Sweden, and a university silver medal.</p>${COURT}`, tour:'Off the keyboard I play right wing in Egypt\'s handball premier league.' },
+    { id:'lang', x:280, y:-300, w:260, cls:'sticky g', html:`<h3>I speak</h3><p style="margin-top:6px">Arabic, native<br>English, fluent<br>French, fluent<br>German and Spanish, fair</p>`, tour:'Five languages, three of them fluently.' },
+    { id:'contact', x:200, y:820, w:440, html:`<p class="kind">Say hello</p><h2 style="margin-top:6px">Let's build something together</h2><p>Graduate and junior roles, Cairo or remote.</p><div class="mail"><code>omartamer1009@gmail.com</code><button class="btn btn-o" type="button" id="copy">Copy</button><a class="btn btn-l" href="https://linkedin.com/in/omar-tamer-farouk">LinkedIn ↗</a><a class="btn btn-l" href="https://github.com/omartamerr10">GitHub ↗</a></div>`, tour:'And here\'s how to reach me. Thanks for the tour.' },
+  ];
+  const STRINGS = [['hello','thesis','my thesis'],['hello','hotel'],['hello','duck'],['hello','xp','work'],['thesis','skills'],['hotel','skills','python'],['maze','duck'],['xp','contact','hire me'],['ball','hello','me too'],['skills','more'],['lang','hello']];
+  const NOTES = [{ x:-110, y:-110, t:'start here ↓', r:-4 },{ x:940, y:70, t:'playable in the other views →', r:3 }];
+
+  const vp = document.getElementById('vp'), world = document.getElementById('world'), svg = document.getElementById('strings');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const els = {}, home = {};
+  CARDS.forEach((c, i) => { const d = document.createElement('article'); d.className = 'card pop ' + (c.cls || ''); d.style.width = c.w + 'px'; d.style.left = c.x + 'px'; d.style.top = c.y + 'px'; d.innerHTML = `<span class="pin" aria-hidden="true"></span>` + c.html; d.dataset.id = c.id; d.tabIndex = 0; world.appendChild(d); els[c.id] = d; home[c.id] = { x:c.x, y:c.y }; c.el = d; setTimeout(() => d.classList.remove('pop'), reduce ? 0 : 500 + i*90); });
+  NOTES.forEach(n => { const d = document.createElement('p'); d.className = 'note'; d.textContent = n.t; d.style.left = n.x + 'px'; d.style.top = n.y + 'px'; d.style.transform = `rotate(${n.r}deg)`; d.setAttribute('aria-hidden', 'true'); world.appendChild(d); });
+
+  /* strings */
+  const paths = STRINGS.map(([a, b, label]) => { const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); svg.appendChild(p); let t = null; if (label){ t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.textContent = label; svg.appendChild(t); } return { a, b, p, t }; });
+  const center = id => { const e = els[id]; return { x: e.offsetLeft + e.offsetWidth/2, y: e.offsetTop + e.offsetHeight/2 }; };
+  const drawStrings = () => paths.forEach(s => { const A = center(s.a), B = center(s.b); const mx = (A.x + B.x)/2, my = (A.y + B.y)/2 + Math.abs(A.x - B.x)*.12 + 40; s.p.setAttribute('d', `M${A.x},${A.y} Q${mx},${my} ${B.x},${B.y}`); if (s.t){ s.t.setAttribute('x', (A.x + 2*mx + B.x)/4 + 8); s.t.setAttribute('y', (A.y + 2*my + B.y)/4 - 6); } });
+
+  /* camera */
+  const cam = { x:0, y:0, s:1 }; let anim = null;
+  const zLbl = document.getElementById('zLbl');
+  const apply = () => { world.style.transform = `translate(${cam.x}px,${cam.y}px) scale(${cam.s})`; const g = 28*cam.s; vp.style.setProperty('--g', g + 'px'); vp.style.setProperty('--gx', cam.x + 'px'); vp.style.setProperty('--gy', cam.y + 'px'); zLbl.textContent = Math.round(cam.s*100) + '%'; drawMini(); };
+  const clampS = s => Math.min(2.2, Math.max(.18, s));
+  const zoomAt = (px, py, f) => { const s2 = clampS(cam.s*f), wx = (px - cam.x)/cam.s, wy = (py - cam.y)/cam.s; cam.x = px - wx*s2; cam.y = py - wy*s2; cam.s = s2; apply(); };
+  const fly = (tx, ty, ts, dur = 900) => { if (reduce) { Object.assign(cam, { x:tx, y:ty, s:ts }); return apply(); } const f = { ...cam }, t0 = performance.now(); cancelAnimationFrame(anim);
+    const ease = t => 1 - Math.pow(1-t, 4); const step = now => { const k = Math.min(1, (now - t0)/dur), e = ease(k); const arc = Math.sin(k*Math.PI)*.18; cam.s = (f.s + (ts - f.s)*e)*(1 - arc*(ts > .5 ? 1 : 0)); cam.x = f.x + (tx - f.x)*e; cam.y = f.y + (ty - f.y)*e; if (k === 1) Object.assign(cam, { x:tx, y:ty, s:ts }); apply(); if (k < 1) anim = requestAnimationFrame(step); }; anim = requestAnimationFrame(step); };
+  const bounds = (ids) => { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; (ids || Object.keys(els)).forEach(id => { const e = els[id]; x0 = Math.min(x0, e.offsetLeft); y0 = Math.min(y0, e.offsetTop); x1 = Math.max(x1, e.offsetLeft + e.offsetWidth); y1 = Math.max(y1, e.offsetTop + e.offsetHeight); }); return { x0, y0, x1, y1 }; };
+  const fitTo = (ids, pad = 80, dur) => { const b = bounds(ids), W = innerWidth, H = innerHeight - 90; const s = clampS(Math.min((W - pad*2)/(b.x1 - b.x0), (H - pad*2)/(b.y1 - b.y0), 1.2)); fly(W/2 - (b.x0 + b.x1)/2*s, (H/2 + 10) - (b.y0 + b.y1)/2*s, s, dur); };
+
+  /* pan, zoom, pinch */
+  const ptrs = new Map(); let panning = false, last = null, pinch = null, vel = { x:0, y:0 }, coast = null;
+  vp.addEventListener('pointerdown', e => { if (e.target.closest('.card')) return; vp.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY }); cancelAnimationFrame(anim); cancelAnimationFrame(coast); stopTour();
+    if (ptrs.size === 1){ panning = true; last = { x:e.clientX, y:e.clientY, t:performance.now() }; vp.classList.add('panning'); } else if (ptrs.size === 2){ const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: cam.s }; panning = false; } hideHint(); });
+  vp.addEventListener('pointermove', e => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+    if (ptrs.size === 2 && pinch){ const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y); zoomAt((a.x + b.x)/2, (a.y + b.y)/2, (pinch.s*d/pinch.d)/cam.s); return; }
+    if (panning){ const now = performance.now(), dx = e.clientX - last.x, dy = e.clientY - last.y; cam.x += dx; cam.y += dy; vel = { x: dx/Math.max(1, now - last.t)*16, y: dy/Math.max(1, now - last.t)*16 }; last = { x:e.clientX, y:e.clientY, t:now }; apply(); } });
+  const endPtr = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0){ vp.classList.remove('panning'); if (panning && !reduce){ const go = () => { vel.x *= .92; vel.y *= .92; cam.x += vel.x; cam.y += vel.y; apply(); if (Math.hypot(vel.x, vel.y) > .3) coast = requestAnimationFrame(go); }; coast = requestAnimationFrame(go); } panning = false; } };
+  vp.addEventListener('pointerup', endPtr); vp.addEventListener('pointercancel', endPtr);
+  vp.addEventListener('wheel', e => { e.preventDefault(); cancelAnimationFrame(anim); stopTour(); hideHint();
+    if (e.ctrlKey) zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY*.01));
+    else if (e.deltaX !== 0 || (e.deltaMode === 0 && Math.abs(e.deltaY) < 40 && !Number.isInteger(e.deltaY))){ cam.x -= e.deltaX; cam.y -= e.deltaY; apply(); }
+    else zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY*.0018)); }, { passive:false });
+  vp.addEventListener('dblclick', e => { const c = e.target.closest('.card'); if (c) fitTo([c.dataset.id], 60); else fitTo(); });
+
+  /* drag cards, with a little tilt from the throw */
+  let z = 10;
+  Object.values(els).forEach(el => {
+    let st = null;
+    el.addEventListener('pointerdown', e => { if (e.target.closest('a,button,code')) return; e.stopPropagation(); el.setPointerCapture(e.pointerId); el.classList.add('drag'); el.style.zIndex = ++z; st = { px:e.clientX, py:e.clientY, x:el.offsetLeft, y:el.offsetTop, lx:e.clientX }; stopTour(); hideHint(); });
+    el.addEventListener('pointermove', e => { if (!st) return; const nx = st.x + (e.clientX - st.px)/cam.s, ny = st.y + (e.clientY - st.py)/cam.s; el.style.left = nx + 'px'; el.style.top = ny + 'px'; const tilt = Math.max(-8, Math.min(8, (e.clientX - st.lx)*.6)); st.lx = e.clientX; el.style.transform = `rotate(${tilt}deg) scale(1.03)`; drawStrings(); drawMini(); });
+    const up = () => { if (!st) return; st = null; el.classList.remove('drag'); el.style.transform = ''; };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') fitTo([el.dataset.id], 60); });
+  });
+
+  /* minimap */
+  const mini = document.getElementById('mini'), mx = mini.getContext('2d');
+  function drawMini(){ if (!mini.offsetParent) return; const b = bounds(), W = mini.width, H = mini.height, pad = 16, s = Math.min((W - pad*2)/(b.x1 - b.x0), (H - pad*2)/(b.y1 - b.y0)), ox = pad - b.x0*s + ((W - pad*2) - (b.x1 - b.x0)*s)/2, oy = pad - b.y0*s + ((H - pad*2) - (b.y1 - b.y0)*s)/2;
+    mx.clearRect(0, 0, W, H); Object.values(els).forEach(e => { mx.fillStyle = e.classList.contains('sticky') ? '#f2c95a' : '#d8cfbd'; mx.fillRect(ox + e.offsetLeft*s, oy + e.offsetTop*s, e.offsetWidth*s, e.offsetHeight*s); });
+    const vx = -cam.x/cam.s, vy = -cam.y/cam.s, vw = innerWidth/cam.s, vh = innerHeight/cam.s; mx.strokeStyle = '#e8853a'; mx.lineWidth = 3; mx.strokeRect(ox + vx*s, oy + vy*s, vw*s, vh*s); mini._m = { s, ox, oy }; }
+  mini.addEventListener('click', e => { const r = mini.getBoundingClientRect(), m = mini._m; const wx = ((e.clientX - r.left)*(mini.width/r.width) - m.ox)/m.s, wy = ((e.clientY - r.top)*(mini.height/r.height) - m.oy)/m.s; fly(innerWidth/2 - wx*cam.s, innerHeight/2 - wy*cam.s, cam.s, 600); });
+
+  /* tools */
+  document.getElementById('zIn').addEventListener('click', () => zoomAt(innerWidth/2, innerHeight/2, 1.25));
+  document.getElementById('zOut').addEventListener('click', () => zoomAt(innerWidth/2, innerHeight/2, .8));
+  zLbl.addEventListener('click', () => { const cx = innerWidth/2, cy = innerHeight/2, wx = (cx - cam.x)/cam.s, wy = (cy - cam.y)/cam.s; fly(cx - wx, cy - wy, 1, 500); });
+  document.getElementById('fit').addEventListener('click', () => fitTo());
+  document.getElementById('reset').addEventListener('click', () => { Object.entries(home).forEach(([id, h]) => { const el = els[id]; el.style.transition = 'left .7s cubic-bezier(.16,1,.3,1), top .7s cubic-bezier(.16,1,.3,1)'; el.style.left = h.x + 'px'; el.style.top = h.y + 'px'; setTimeout(() => el.style.transition = '', 720); }); const t0 = performance.now(); const go = now => { drawStrings(); drawMini(); if (now - t0 < 760) requestAnimationFrame(go); }; requestAnimationFrame(go); });
+  document.getElementById('copy').addEventListener('click', async e => { const b = e.currentTarget; try { await navigator.clipboard.writeText('omartamer1009@gmail.com'); b.textContent = 'Copied'; } catch { b.textContent = 'Select it'; } setTimeout(() => b.textContent = 'Copy', 1800); });
+
+  /* guided tour */
+  const cap = document.getElementById('cap'), cTxt = document.getElementById('cTxt'); let ti = -1, tTimer = 0;
+  const show = i => { ti = (i + CARDS.length) % CARDS.length; const c = CARDS[ti]; cTxt.innerHTML = `<b>${ti + 1} / ${CARDS.length}</b>${c.tour}`; cap.classList.add('on'); fitTo([c.id], innerWidth < 760 ? 24 : 110, 1100); clearTimeout(tTimer); tTimer = setTimeout(() => show(ti + 1), 5200); };
+  function stopTour(){ if (ti < 0) return; clearTimeout(tTimer); ti = -1; cap.classList.remove('on'); }
+  document.getElementById('tour').addEventListener('click', () => show(0));
+  document.getElementById('cNext').addEventListener('click', () => show(ti + 1));
+  document.getElementById('cPrev').addEventListener('click', () => show(ti - 1));
+  addEventListener('keydown', e => { if (e.target.closest('input,textarea')) return; if (ti >= 0 && e.key === 'ArrowRight') show(ti + 1); if (ti >= 0 && e.key === 'ArrowLeft') show(ti - 1); if (e.key === 'Escape') stopTour(); if (e.key === '+' || e.key === '=') zoomAt(innerWidth/2, innerHeight/2, 1.2); if (e.key === '-') zoomAt(innerWidth/2, innerHeight/2, .83); if (e.key === '0') fitTo(); });
+
+  const hint = document.getElementById('hint'); function hideHint(){ hint.classList.add('gone'); }
+  setTimeout(hideHint, 7000);
+  addEventListener('resize', apply);
+
+  /* opening: everything from far away, then fly to hello */
+  cam.s = .2; cam.x = innerWidth/2; cam.y = innerHeight/2; apply(); drawStrings();
+  requestAnimationFrame(() => { drawStrings(); fitTo(null, 60, 10); setTimeout(() => { drawStrings(); fitTo(null, 60, 1); }, 30); setTimeout(() => { drawStrings(); if (innerWidth < 760) fitTo(['hello'], 16, 1400); else fitTo(['hello', 'thesis', 'hotel', 'lang', 'xp'], 60, 1600); }, reduce ? 0 : 1700); });
+  document.fonts && document.fonts.ready.then(drawStrings);
+})();
+</script>
+<!-- view switcher: shared by every version -->
+<div class="ovs" data-pos="tr" data-current="board">
+  <button class="ovs-pill" type="button" aria-expanded="false" aria-controls="ovsPanel"><span class="ovs-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span><span>Switch view</span></button>
+  <div class="ovs-panel" id="ovsPanel" role="menu" hidden>
+    <p class="ovs-h">Six ways to meet Omar</p>
+    <a role="menuitem" href="../pro/index.html" data-v="pro"><b style="--c:#1f5bb5">Professional</b><span>Clean and quick to read</span></a>
+    <a role="menuitem" href="../cinematic/index.html" data-v="cinematic"><b style="--c:#e8c98f">Cinematic 3D</b><span>12,000 particles, playable apps</span></a>
+    <a role="menuitem" href="../os/index.html" data-v="os"><b style="--c:#2fc7a7">OmarOS</b><span>A working desktop and terminal</span></a>
+    <a role="menuitem" href="../board/index.html" data-v="board"><b style="--c:#f2a65a">The Board</b><span>An infinite canvas to explore</span></a>
+    <a role="menuitem" href="../arcade/index.html" data-v="arcade"><b style="--c:#d94f4f">Omar's Quest</b><span>Play through my story</span></a>
+    <a role="menuitem" href="../og/index.html" data-v="og"><b style="--c:#8a7f6e">The OG</b><span>The original portfolio</span></a>
+    <a class="ovs-all" role="menuitem" href="../index.html">See all six side by side</a>
+  </div>
+</div>
+<style>
+.ovs{position:fixed;z-index:99990;font:500 14px/1.3 "Inter",system-ui,sans-serif;color:#0f1a2a}
+.ovs[data-pos="bl"]{left:max(16px,env(safe-area-inset-left,0px));bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.ovs[data-pos="br"]{right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.ovs[data-pos="tr"]{right:max(16px,env(safe-area-inset-right,0px));top:max(16px,env(safe-area-inset-top,0px))}
+.ovs[data-pos="tl"]{left:max(16px,env(safe-area-inset-left,0px));top:max(16px,env(safe-area-inset-top,0px))}
+.ovs-pill{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 16px 0 12px;border:0;border-radius:999px;background:rgba(255,255,255,.94);color:#0f1a2a;font:600 13.5px/1 "Inter",system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px -10px rgba(0,0,0,.45),0 0 0 1px rgba(15,26,42,.08);transition:transform .25s cubic-bezier(.16,1,.3,1)}
+.ovs-pill:hover{transform:translateY(-2px)}
+.ovs-dots{display:grid;grid-template-columns:repeat(6,6px);gap:3px}
+.ovs-dots i{width:6px;height:6px;border-radius:50%;background:#c3cad5}
+.ovs-dots i:nth-child(1){background:#1f5bb5}.ovs-dots i:nth-child(2){background:#e8c98f}.ovs-dots i:nth-child(3){background:#2fc7a7}.ovs-dots i:nth-child(4){background:#f2a65a}.ovs-dots i:nth-child(5){background:#d94f4f}.ovs-dots i:nth-child(6){background:#8a7f6e}
+.ovs-panel{position:absolute;width:290px;padding:10px;border-radius:18px;background:#fff;box-shadow:0 24px 60px -16px rgba(0,0,0,.5),0 0 0 1px rgba(15,26,42,.08);display:grid;gap:2px;transform-origin:bottom left;animation:ovsIn .3s cubic-bezier(.16,1,.3,1)}
+.ovs[data-pos^="b"] .ovs-panel{bottom:50px}
+.ovs[data-pos^="t"] .ovs-panel{top:50px;transform-origin:top right}
+.ovs[data-pos$="l"] .ovs-panel{left:0}
+.ovs[data-pos$="r"] .ovs-panel{right:0}
+.ovs-panel[hidden]{display:none}
+@keyframes ovsIn{from{opacity:0;transform:scale(.92) translateY(8px)}}
+.ovs-h{margin:4px 10px 8px;font:600 11px/1 "Inter",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#718096}
+.ovs-panel a{display:grid;gap:2px;padding:9px 10px;border-radius:12px;text-decoration:none;color:#0f1a2a;transition:background-color .15s}
+.ovs-panel a:hover,.ovs-panel a:focus-visible{background:#f1f4f8;outline:none}
+.ovs-panel a b{display:flex;align-items:center;gap:8px;font-weight:600}
+.ovs-panel a b::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c)}
+.ovs-panel a span{color:#5b6779;font-size:12.5px;padding-left:17px}
+.ovs-panel a[aria-current="page"]{background:#f1f4f8}
+.ovs-panel a[aria-current="page"] b::after{content:"You're here";margin-left:auto;font:500 11px/1 "Inter",system-ui,sans-serif;color:#718096}
+.ovs-panel .ovs-all{margin-top:4px;padding:11px 10px;border-radius:12px;background:#0f1a2a;color:#fff;font-weight:600;text-align:center}
+.ovs-panel .ovs-all:hover{background:#24324a}
+.ovs-veil{position:fixed;inset:0;z-index:99999;pointer-events:none;background:#0f1a2a;clip-path:circle(0% at var(--x,50%) var(--y,50%));transition:clip-path .6s cubic-bezier(.7,0,.2,1)}
+.ovs-veil.on{clip-path:circle(150% at var(--x,50%) var(--y,50%))}
+@media (prefers-reduced-motion:reduce){.ovs-panel{animation:none}.ovs-veil{transition:none}}
+</style>
+<script>
+(() => {
+  const root = document.querySelector('.ovs'), pill = root.querySelector('.ovs-pill'), panel = root.querySelector('.ovs-panel');
+  const cur = root.dataset.current;
+  try { localStorage.setItem('omar-view', cur); } catch {}
+  panel.querySelector(`[data-v="${cur}"]`)?.setAttribute('aria-current', 'page');
+  const toggle = (open) => { panel.hidden = !open; pill.setAttribute('aria-expanded', String(open)); if (open) panel.querySelector('a')?.focus(); };
+  pill.addEventListener('click', e => { e.stopPropagation(); toggle(panel.hidden); });
+  document.addEventListener('click', e => { if (!root.contains(e.target)) toggle(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden) { toggle(false); pill.focus(); } });
+  // circular wipe out of the page, in the colour of where you're going
+  const veil = document.createElement('div'); veil.className = 'ovs-veil'; document.body.appendChild(veil);
+  panel.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
+    if (a.getAttribute('aria-current') === 'page') { e.preventDefault(); toggle(false); return; }
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    e.preventDefault(); const r = pill.getBoundingClientRect();
+    veil.style.setProperty('--x', (r.left + r.width/2) + 'px'); veil.style.setProperty('--y', (r.top + r.height/2) + 'px');
+    veil.style.background = getComputedStyle(a.querySelector('b') || a).getPropertyValue('--c') || '#0f1a2a';
+    veil.classList.add('on'); setTimeout(() => { location.href = a.href; }, 560);
+  }));
+  addEventListener('pageshow', () => veil.classList.remove('on'));
+})();
+</script>
+
+</body>
+</html>
